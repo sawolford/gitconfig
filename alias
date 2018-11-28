@@ -1,0 +1,82 @@
+[alias]
+	# alias
+	alias = !git config --list | grep alias
+	aliasg = !git config --list | grep alias | grep
+	# branch
+	remaster = branch --set-upstream-to=origin/master master
+	bdiff = diff --left-right
+	blog = log --left-right
+	branches = branch -a
+	branchc = rev-parse --abbrev-ref HEAD
+	branchd = branch -d
+	brancht = branch -t
+	bcontains = branch --contains
+	# bundle
+	bundlec = "!f() { \
+		git bundle create $1 $2 HEAD~$3..$4; \
+	}; f"
+	bundlev = bundle verify
+	bundlef = "!f() { \
+		git fetch $1 $2:$(basename $1)-$2; \
+	}; f"
+	# diff
+	diffc = diff --cached
+	diffcm = difftool --tool=meld -y --cached
+	diffci = difftool --tool=icdiff -y --cached
+	diffm = !git st && git difftool --tool=meld -y
+	diffi = !git st && git difftool --tool=icdiff -y
+	# glog
+	glb = log --graph --pretty=short --left-right
+	gl = !git glb --all
+	glr = !git gl --reflog
+	gltb = log --graph --pretty=oneline --left-right
+	glt = !git gltb --all
+	gltr = !git glt --reflog
+	glt1 = !git glt -n 1
+	glt5 = !git glt -n 5
+	glt10 = !git glt -n 10
+	glv = log --name-status
+	glv1 = !git glv -n 1
+	# hg
+	ci = commit
+	cia = commit -a
+	co = checkout
+	bco = checkout -b
+	heads = show-ref --heads
+	in = !git fetch && git log --left-right ..FETCH_HEAD
+	incoming = !git fetch && git log --left-right ..FETCH_HEAD
+	out = !git fetch && git log --left-right FETCH_HEAD..
+	outgoing = !git fetch && git log --left-right FETCH_HEAD..
+	paths = remote -v
+	st = status --short
+	purge = clean -fd
+	showconfig = config --list
+	schemes = !git showconfig | grep ^url
+	# merge
+	mergec = merge --no-ff
+	mergef = merge
+	mergea = merge --abort
+	mergem = mergetool --tool=meld -y
+	mergek = mergetool --tool=kdiff3 -y
+	# misc
+	rsho = remote set-head origin
+	# push
+	pushuu  = push --set-upstream
+	pushu = !git pushuu origin
+	pushdd = push --delete 
+	pushd = !git pushdd origin
+	rebasea = rebase --abort
+	rebasec = rebase --continue
+	# reset
+	rhard = reset --hard
+	rmixed = reset --mixed
+	rsoft = reset --soft
+	# strip
+	strip = reset --hard HEAD^
+	dangling = fsck --no-reflogs
+	cleanup = !git reflog expire --expire-unreachable=now --all && git gc --prune=now
+	# stash
+	stpush = stash
+	stpop = stash apply
+	stlist = stash list
+	stdrop = stash drop stash@{0}

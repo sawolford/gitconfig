@@ -1,0 +1,13 @@
+[core]
+	autocrlf = input
+	precomposeUnicode = true
+	excludesFile = .gitignorelocal
+[color]
+	ui = true
+	decorate = short
+[push]
+	default = tracking
+[fetch]
+	prune = true
+[include]
+	path = local

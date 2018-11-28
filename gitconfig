@@ -1,0 +1,5 @@
+[include]
+	path = standard
+	path = alias
+	path = diff
+	path = schemes

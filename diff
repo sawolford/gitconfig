@@ -1,0 +1,9 @@
+[mergetool]
+	trustExitCode = true
+[diff]
+	tool = icdiff
+[difftool "icdiff"]
+	cmd = icdiff --head=5000 --highlight --line-numbers -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
+[pager]
+	diffci = true
+	diffi = true
