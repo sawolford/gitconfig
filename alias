@@ -4,7 +4,6 @@
 	aliasg = !git config --list | grep alias | grep
 	# branch
 	remaster = branch --set-upstream-to=origin/master master
-	bdiff = diff --left-right
 	blog = log --left-right
 	branches = branch -a
 	branchc = rev-parse --abbrev-ref HEAD
@@ -21,27 +20,29 @@
 	}; f"
 	# diff
 	diffc = diff --cached
-	diffcm = difftool --tool=meld -y --cached
-	diffci = difftool --tool=icdiff -y --cached
-	diffm = !git st && git difftool --tool=meld -y
-	diffi = !git st && git difftool --tool=icdiff -y
+	dtmc = difftool --tool=meld -y --cached
+	dtic = difftool --tool=icdiff -y --cached
+	dtvc = difftool --tool=vimdiff -y --cached
+	dtm = difftool --tool=meld -y
+	dti = difftool --tool=icdiff -y
+	dtv = difftool --tool=vimdiff -y
 	# glog
-	glb = log --graph --pretty=short --left-right
-	gl = !git glb --all
-	glr = !git gl --reflog
-	gltb = log --graph --pretty=oneline --left-right
-	glt = !git gltb --all
-	gltr = !git glt --reflog
+	glv = log --graph --pretty=short --left-right
+	glva = glv --all --reflog
+	glt = log --graph --pretty=oneline --left-right
+	glta = !git glt --all --reflog
 	glt1 = !git glt -n 1
 	glt5 = !git glt -n 5
 	glt10 = !git glt -n 10
 	glv = log --name-status
 	glv1 = !git glv -n 1
 	# hg
+	bco = checkout -b
 	ci = commit
 	cia = commit -a
+	cii = commit --interactive
 	co = checkout
-	bco = checkout -b
+	di = diff
 	heads = show-ref --heads
 	in = !git fetch && git log --left-right ..FETCH_HEAD
 	incoming = !git fetch && git log --left-right ..FETCH_HEAD
@@ -60,6 +61,7 @@
 	mergek = mergetool --tool=kdiff3 -y
 	# misc
 	rsho = remote set-head origin
+	checkpoint = !git ls-files -z | xargs -0 git add
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin
