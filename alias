@@ -19,17 +19,31 @@
 		git fetch $1 $2:$(basename $1)-$2; \
 	}; f"
 	# diff
-	diffc = diff --cached
-	dtmc = difftool --tool=meld -y --cached
-	dtic = difftool --tool=icdiff -y --cached
-	dtvc = difftool --tool=vimdiff -y --cached
+	dtk = difftool --tool=kdiff3 -y
 	dtm = difftool --tool=meld -y
 	dti = difftool --tool=icdiff -y
 	dtv = difftool --tool=vimdiff -y
+	diffc = diff --cached
+	dtkc = difftool --tool=kdiff3 -y --cached
+	dtmc = difftool --tool=meld -y --cached
+	dtic = difftool --tool=icdiff -y --cached
+	dtvc = difftool --tool=vimdiff -y --cached
+	dtkr = "!f() { \
+		git difftool --tool=kdiff3 -y $1^..$1; \
+	}; f"
+	dtmr = "!f() { \
+		git difftool --tool=meld -y $1^..$1; \
+	}; f"
+	dtir = "!f() { \
+		git difftool --tool=icdiff -y $1^..$1; \
+	}; f"
+	dtvr = "!f() { \
+		git difftool --tool=vimdiff -y $1^..$1; \
+	}; f"
 	# glog
 	glv = log --graph --pretty=short --left-right
 	glva = glv --all --reflog
-	glt = log --graph --pretty=oneline --left-right
+	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %s%C(yellow)%d%Creset' --abbrev-commit --left-right
 	glta = !git glt --all --reflog
 	glt1 = !git glt -n 1
 	glt5 = !git glt -n 5
@@ -74,11 +88,16 @@
 	rmixed = reset --mixed
 	rsoft = reset --soft
 	# strip
-	strip = reset --hard HEAD^
+	striphead = reset --hard HEAD^
+	strip = "!f() { \
+		git reset --hard $1^; \
+	}; f"
 	dangling = fsck --no-reflogs
 	cleanup = !git reflog expire --expire-unreachable=now --all && git gc --prune=now
 	# stash
 	stpush = stash
-	stpop = stash apply
+	stpop = stash pop
 	stlist = stash list
-	stdrop = stash drop stash@{0}
+	stshow = stash show
+	stdrop = stash drop
+	ststage = add -u .
