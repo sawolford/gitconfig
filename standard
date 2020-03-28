@@ -5,6 +5,7 @@
 [color]
 	ui = true
 	decorate = short
+	status = auto
 [push]
 	default = tracking
 [fetch]

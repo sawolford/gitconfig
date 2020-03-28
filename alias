@@ -1,4 +1,6 @@
 [alias]
+	# config
+	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	# alias
 	alias = !git config --list | grep alias
 	aliasg = !git config --list | grep alias | grep
@@ -54,19 +56,23 @@
 	bco = checkout -b
 	ci = commit
 	cia = commit -a
+	addi = add --interactive
 	cii = commit --interactive
 	co = checkout
 	di = diff
 	heads = show-ref --heads
-	in = !git fetch && git log --left-right ..FETCH_HEAD
-	incoming = !git fetch && git log --left-right ..FETCH_HEAD
-	out = !git fetch && git log --left-right FETCH_HEAD..
-	outgoing = !git fetch && git log --left-right FETCH_HEAD..
+	in = !git fetch && git log --left-right ..origin/master
+	incoming = !git fetch && git log --left-right ..origin/master
+	out = !git fetch && git log --left-right origin/master..
+	outgoing = !git fetch && git log --left-right origin/master..
 	paths = remote -v
 	st = status --short
+	cst = !git -c color.status=always status --short
 	purge = clean -fd
 	showconfig = config --list
+	showconfigg = !git config --list | grep
 	schemes = !git showconfig | grep ^url
+	manifest = ls-tree -r --name-only --full-tree HEAD
 	# merge
 	mergec = merge --no-ff
 	mergef = merge
@@ -74,6 +80,7 @@
 	mergem = mergetool --tool=meld -y
 	mergek = mergetool --tool=kdiff3 -y
 	# misc
+	addu = add -u .
 	rsho = remote set-head origin
 	checkpoint = !git ls-files -z | xargs -0 git add
 	# push
@@ -88,7 +95,9 @@
 	rmixed = reset --mixed
 	rsoft = reset --soft
 	# strip
-	striphead = reset --hard HEAD^
+	stripbare = "!f() { \
+		git update-ref HEAD HEAD^; \
+	}; f"
 	strip = "!f() { \
 		git reset --hard $1^; \
 	}; f"
@@ -100,4 +109,3 @@
 	stlist = stash list
 	stshow = stash show
 	stdrop = stash drop
-	ststage = add -u .
