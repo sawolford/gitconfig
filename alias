@@ -102,10 +102,42 @@
 		git reset --hard $1^; \
 	}; f"
 	dangling = fsck --no-reflogs
-	cleanup = !git reflog expire --expire-unreachable=now --all && git gc --prune=now
+	cleanup = reflog expire --expire=now --all
 	# stash
 	stpush = stash
 	stpop = stash pop
 	stlist = stash list
 	stshow = stash show
 	stdrop = stash drop
+	# download
+	index2wc = reset --mixed
+	mtool = mergetool -y --tool=kdiff3
+	rebcon = rebase --continue
+	stash2wc = stash pop
+	stow = stash
+	sync = fetch
+	download = "!f() { \
+		git sync; \
+		git stow; \
+		git rebase origin/master && git unstow && return; \
+		while ! git combine; do true; done; \
+		git unstow; \
+	}; f"
+	combine = "!f() { \
+		git mtool; \
+		git rebcon; \
+	}; f"
+	unstow = "!f() { \
+		git stash2wc; \
+		git mtool; \
+		git index2wc; \
+		git stash clear; \
+	}; f"
+	remaster = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: remaster <branch>' && return; \
+		git stow; \
+		git co master; \
+		git merge $1; \
+		git unstow; \
+		git branch -d $1; \
+	}; f"
