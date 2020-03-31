@@ -1,7 +1,7 @@
 [core]
 	autocrlf = input
 	precomposeUnicode = true
-	excludesFile = .gitignorelocal
+	excludesFile = ~/.gitignore
 [color]
 	ui = true
 	decorate = short

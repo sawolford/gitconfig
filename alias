@@ -5,10 +5,11 @@
 	alias = !git config --list | grep alias
 	aliasg = !git config --list | grep alias | grep
 	# branch
-	remaster = branch --set-upstream-to=origin/master master
+	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
 	branches = branch -a
 	branchc = rev-parse --abbrev-ref HEAD
+	branchu = rev-parse --abbrev-ref --symbolic-full-name @{u}
 	branchd = branch -d
 	brancht = branch -t
 	bcontains = branch --contains
@@ -48,8 +49,11 @@
 	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %s%C(yellow)%d%Creset' --abbrev-commit --left-right
 	glta = !git glt --all --reflog
 	glt1 = !git glt -n 1
+	glt1a = !git glta -n 1
 	glt5 = !git glt -n 5
+	glt5a = !git glta -n 5
 	glt10 = !git glt -n 10
+	glt10a = !git glta -n 10
 	glv = log --name-status
 	glv1 = !git glv -n 1
 	# hg
@@ -61,10 +65,10 @@
 	co = checkout
 	di = diff
 	heads = show-ref --heads
-	in = !git fetch && git log --left-right ..origin/master
-	incoming = !git fetch && git log --left-right ..origin/master
-	out = !git fetch && git log --left-right origin/master..
-	outgoing = !git fetch && git log --left-right origin/master..
+	in = !git fetch && git log --left-right ..@{u}
+	incoming = !git fetch && git log --left-right ..@{u}
+	out = !git fetch && git log --left-right @{u}..
+	outgoing = !git fetch && git log --left-right @{u}..
 	paths = remote -v
 	st = status --short
 	cst = !git -c color.status=always status --short
@@ -116,12 +120,17 @@
 	stash2wc = stash pop
 	stow = stash
 	sync = fetch
-	download = "!f() { \
-		git sync; \
+	rebcombine = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return; \
 		git stow; \
-		git rebase origin/master && git unstow && return; \
+		if git rebase $1; then git unstow; return; fi; \
 		while ! git combine; do true; done; \
 		git unstow; \
+	}; f"
+	download = "!f() { \
+		git sync; \
+		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return; fi; \
+		git rebcombine @{u}; \
 	}; f"
 	combine = "!f() { \
 		git mtool; \
@@ -133,11 +142,14 @@
 		git index2wc; \
 		git stash clear; \
 	}; f"
-	remaster = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: remaster <branch>' && return; \
+	mergemaster = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: mergemaster <branch>' && return; \
+		git stow; \
+		git co $1; \
+		git rebcombine master; \
 		git stow; \
 		git co master; \
 		git merge $1; \
-		git unstow; \
 		git branch -d $1; \
+		git unstow; \
 	}; f"
