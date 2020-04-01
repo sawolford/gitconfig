@@ -46,7 +46,7 @@
 	# glog
 	glv = log --graph --pretty=short --left-right
 	glva = glv --all --reflog
-	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %s%C(yellow)%d%Creset' --abbrev-commit --left-right
+	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s' --abbrev-commit --left-right
 	glta = !git glt --all --reflog
 	glt1 = !git glt -n 1
 	glt1a = !git glta -n 1
@@ -57,7 +57,7 @@
 	glv = log --name-status
 	glv1 = !git glv -n 1
 	# hg
-	bco = checkout -b
+	cob = checkout -b
 	ci = commit
 	cia = commit -a
 	addi = add --interactive
@@ -99,9 +99,7 @@
 	rmixed = reset --mixed
 	rsoft = reset --soft
 	# strip
-	stripbare = "!f() { \
-		git update-ref HEAD HEAD^; \
-	}; f"
+	stripbare = update-ref HEAD HEAD^
 	strip = "!f() { \
 		git reset --hard $1^; \
 	}; f"
@@ -118,8 +116,7 @@
 	mtool = mergetool -y --tool=kdiff3
 	rebcon = rebase --continue
 	stash2wc = stash pop
-	stow = stash
-	sync = fetch
+	stow = stash -u
 	rebcombine = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return; \
 		git stow; \
@@ -128,7 +125,7 @@
 		git unstow; \
 	}; f"
 	download = "!f() { \
-		git sync; \
+		git fetch; \
 		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return; fi; \
 		git rebcombine @{u}; \
 	}; f"
