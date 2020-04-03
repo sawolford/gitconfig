@@ -112,39 +112,43 @@
 	stshow = stash show
 	stdrop = stash drop
 	# download
-	index2wc = reset --mixed
 	mtool = mergetool -y --tool=kdiff3
 	rebcon = rebase --continue
-	stash2wc = stash pop
-	stow = stash -u
+	stow = "!f() { \
+		[[ -z $(git status -s) ]] && return; \
+		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
+		git checkout -b _stow; \
+		git add -A; \
+		git commit -m stow; \
+		git checkout \"$PREV\"; \
+	}; f"
+	unstow = "!f() { \
+		git cherry-pick _stow; \
+		git mtool; \
+		git reset --mixed; \
+		git branch -D _stow; \
+	}; f"
 	rebcombine = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return; \
-		git stow; \
-		if git rebase $1; then git unstow; return; fi; \
+		if git rebase $1; then return; fi; \
 		while ! git combine; do true; done; \
-		git unstow; \
 	}; f"
 	download = "!f() { \
 		git fetch; \
 		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return; fi; \
+		git stow; \
 		git rebcombine @{u}; \
+		git unstow; \
 	}; f"
 	combine = "!f() { \
 		git mtool; \
 		git rebcon; \
-	}; f"
-	unstow = "!f() { \
-		git stash2wc; \
-		git mtool; \
-		git index2wc; \
-		git stash clear; \
 	}; f"
 	mergemaster = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: mergemaster <branch>' && return; \
 		git stow; \
 		git co $1; \
 		git rebcombine master; \
-		git stow; \
 		git co master; \
 		git merge $1; \
 		git branch -d $1; \

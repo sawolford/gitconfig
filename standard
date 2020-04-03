@@ -8,6 +8,8 @@
 	status = auto
 [push]
 	default = tracking
+[pull]
+	ff = only
 [fetch]
 	prune = true
 [include]
