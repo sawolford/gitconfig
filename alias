@@ -115,15 +115,16 @@
 	mtool = mergetool -y --tool=kdiff3
 	rebcon = rebase --continue
 	stow = "!f() { \
-		[[ -z $(git status -s) ]] && return; \
+		[ -z \"$(git status -s)\" ] && return; \
+		if ! git symbolic-ref HEAD; then echo 'detached head'; return 1; fi; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		git checkout -b _stow; \
+		if ! git checkout -b _stow; then echo 'already stowed'; return 1; fi; \
 		git add -A; \
 		git commit -m stow; \
 		git checkout \"$PREV\"; \
 	}; f"
 	unstow = "!f() { \
-		git cherry-pick _stow; \
+		git cherry-pick -n _stow; \
 		git mtool; \
 		git reset --mixed; \
 		git branch -D _stow; \
@@ -136,7 +137,7 @@
 	download = "!f() { \
 		git fetch; \
 		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return; fi; \
-		git stow; \
+		if ! git stow; then return; fi; \
 		git rebcombine @{u}; \
 		git unstow; \
 	}; f"
