@@ -1,6 +1,3 @@
-[mergetool]
-	trustExitCode = true
-	keepBackup = false
 [diff]
 	tool = icdiff
 [difftool "icdiff"]

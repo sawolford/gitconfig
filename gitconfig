@@ -3,3 +3,4 @@
 	path = alias
 	path = diff
 	path = schemes
+    path = merge
