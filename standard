@@ -2,6 +2,7 @@
 	autocrlf = input
 	precomposeUnicode = true
 	excludesFile = ~/.gitignore
+    hooksPath = ./hooks
 [color]
 	ui = true
 	decorate = short
