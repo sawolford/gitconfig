@@ -113,10 +113,11 @@
 	stdrop = stash drop
 	# download
 	mtool = mergetool -y --tool=kdiff3
-	rebcon = rebase --continue
+	rebcont = rebase --continue
+	rebskip = rebase --skip
 	combine = "!f() { \
 		git mtool; \
-		git rebcon; \
+		if test -n "$(git status --porcelain)" 2>/dev/null; then git rebskip; else git rebcont; fi; \
 	}; f"
 	rebcombine = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return 1; \
