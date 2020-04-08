@@ -114,9 +114,18 @@
 	# download
 	mtool = mergetool -y --tool=kdiff3
 	rebcon = rebase --continue
+	combine = "!f() { \
+		git mtool; \
+		git rebcon; \
+	}; f"
+	rebcombine = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return 1; \
+		if git rebase $1; then return; fi; \
+		while ! git combine; do true; done; \
+	}; f"
 	stow = "!f() { \
 		[ -z \"$(git status -s)\" ] && return; \
-		if ! git symbolic-ref HEAD; then echo 'detached head'; return 1; fi; \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git checkout -b _stow; then echo 'already stowed'; return 1; fi; \
 		git add -A; \
@@ -129,29 +138,71 @@
 		git reset --mixed; \
 		git branch -D _stow; \
 	}; f"
-	rebcombine = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return; \
-		if git rebase $1; then return; fi; \
-		while ! git combine; do true; done; \
+	stowco = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: stowco <branch>' && return 1; \
+		if ! git stow; then return 1; fi; \
+		git co $1; \
+		git unstow; \
+	}; f"
+	rebaseto = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: rebaseto <branch>' && return 1; \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		if ! git stow; then return 1; fi; \
+		git rebcombine $1; \
+		git unstow; \
+	}; f"
+	rebasefrom = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: rebasefrom <branch>' && return 1; \
+		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
+		if ! git show-ref $PREV; then echo 'branch not a named ref'; return 1; fi; \
+		if ! git stow; then return 1; fi; \
+		git co $1; \
+		git rebcombine $PREV; \
+		git co $PREV; \
+		git unstow; \
+	}; f"
+	mergeto = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: mergeto <branch>' && return 1; \
+		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		if ! git stow; then return 1; fi; \
+		git co $1; \
+		if ! git merge $PREV; then git mtool; git ci; fi; \
+		git unstow; \
+	}; f"
+	mergefrom = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: mergefrom <branch>' && return 1; \
+		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		if ! git stow; then return 1; fi; \
+		if ! git merge $1; then git mtool; git ci; fi; \
+		git unstow; \
+	}; f"
+	finishto = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: finishto <branch>' && return 1; \
+		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		git rebaseto $1; \
+		git mergeto $1; \
+		git branch -d $PREV; \
+	}; f"
+	finishfrom = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		[ $# -ne 1 ] && echo 'Usage: finishfrom <branch>' && return 1; \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		git rebasefrom $1; \
+		git mergefrom $1; \
+		git branch -d $1; \
 	}; f"
 	download = "!f() { \
+		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
+		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return 1; fi; \
 		git fetch; \
-		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return; fi; \
-		if ! git stow; then return; fi; \
-		git rebcombine @{u}; \
-		git unstow; \
-	}; f"
-	combine = "!f() { \
-		git mtool; \
-		git rebcon; \
-	}; f"
-	mergemaster = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: mergemaster <branch>' && return; \
-		git stow; \
-		git co $1; \
-		git rebcombine master; \
-		git co master; \
-		git merge $1; \
-		git branch -d $1; \
-		git unstow; \
+		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
+		git rebaseto $UPSTREAM; \
 	}; f"
