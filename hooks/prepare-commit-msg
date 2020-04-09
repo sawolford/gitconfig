@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# A hook script to prepare the commit log message.
+# Called by "git commit" with the name of the file that has the
+# commit message, followed by the description of the commit
+# message's source.  The hook's purpose is to edit the commit
+# message file.  If the hook fails with a non-zero status,
+# the commit is aborted.
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+MERGE_TEMPLATE=""
+SQUASH_TEMPLATE=""
+COMMIT_TEMPLATE="# Subject line (try to keep under 50 characters)
+#
+# Multi-line description of commit,
+# feel free to be detailed.
+"
+
+# Create temporary with commit message template
+TEMP="$(mktemp)"
+case "$COMMIT_SOURCE,$SHA1" in
+    merge,   ) echo -n "$MERGE_TEMPLATE" >> "$TEMP" ;;
+    squash,  ) echo -n "$SQUASH_TEMPLATE" >> "$TEMP" ;;
+    ,|commit,) echo -n "$COMMIT_TEMPLATE" >> "$TEMP" ;;
+    *) ;;
+esac
+cat "$COMMIT_MSG_FILE" >> "$TEMP"
+
+# Replace commit message file contents with templated message
+cat "$TEMP" > $COMMIT_MSG_FILE
