@@ -49,11 +49,11 @@
 	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s' --abbrev-commit --left-right
 	glta = !git glt --all --reflog
 	glt1 = !git glt -n 1
-	glt1a = !git glta -n 1
+	glta1 = !git glta -n 1
 	glt5 = !git glt -n 5
-	glt5a = !git glta -n 5
+	glta5 = !git glta -n 5
 	glt10 = !git glt -n 10
-	glt10a = !git glta -n 10
+	glta10 = !git glta -n 10
 	glv = log --name-status
 	glv1 = !git glv -n 1
 	# hg
@@ -157,7 +157,7 @@
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
 		[ $# -ne 1 ] && echo 'Usage: rebasefrom <branch>' && return 1; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git show-ref $PREV; then echo 'branch not a named ref'; return 1; fi; \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
 		git co $1; \
 		git rebcombine $PREV; \
