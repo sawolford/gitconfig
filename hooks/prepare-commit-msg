@@ -16,15 +16,14 @@ SQUASH_TEMPLATE=""
 COMMIT_TEMPLATE="# Subject line (try to keep under 50 characters)
 #
 # Multi-line description of commit,
-# feel free to be detailed.
-"
+# feel free to be detailed."
 
 # Create temporary with commit message template
 TEMP="$(mktemp)"
 case "$COMMIT_SOURCE,$SHA1" in
-    merge,   ) echo -n "$MERGE_TEMPLATE" >> "$TEMP" ;;
-    squash,  ) echo -n "$SQUASH_TEMPLATE" >> "$TEMP" ;;
-    ,|commit,) echo -n "$COMMIT_TEMPLATE" >> "$TEMP" ;;
+    merge,   ) echo "$MERGE_TEMPLATE" >> "$TEMP" ;;
+    squash,  ) echo "$SQUASH_TEMPLATE" >> "$TEMP" ;;
+    ,|commit,) echo "$COMMIT_TEMPLATE" >> "$TEMP" ;;
     *) ;;
 esac
 cat "$COMMIT_MSG_FILE" >> "$TEMP"
