@@ -1,13 +1,9 @@
+[merge]
+    tool = kdiff3
 [mergetool]
     trustExitCode = true
     keepBackup = false
-[mergetool "meld"]
-    # $LOCAL is the file in the current branch
-    # $REMOTE is the file in the branch being merged
-    # $MERGED is the partially merged file conflict information
-    # $BASE is the shared commit ancestor of $LOCAL and $REMOTE
-    #
-    # Choose one of these 2 lines (not both!)
-    # Note: Configured for editing the middle panel within Meld
-    cmd = meld \"$LOCAL\" \"$MERGED\" \"$REMOTE\" --output \"$MERGED\"
-    #cmd = meld \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output \"$MERGED\"
+# $LOCAL is the file in the current branch
+# $REMOTE is the file in the branch being merged
+# $MERGED is the partially merged file conflict information
+# $BASE is the shared commit ancestor of $LOCAL and $REMOTE

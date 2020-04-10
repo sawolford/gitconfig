@@ -120,7 +120,7 @@
 	stshow = stash show
 	stdrop = stash drop
 	# download
-	mtool = mergetool -y --tool=kdiff3
+	mtool = mergetool -y
 	rebcont = rebase --continue
 	rebskip = rebase --skip
 	combine = "!f() { \
