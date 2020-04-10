@@ -215,3 +215,11 @@
 		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
 		git rebaseto $UPSTREAM; \
 	}; f"
+	pickfrom = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: rebasefrom <revision(s)>' && return 1; \
+		if ! git stow; then return 1; fi; \
+		git cherry-pick $1; \
+		git mtool; \
+		git ci; \
+		git unstow; \
+	}; f"
