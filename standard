@@ -12,5 +12,3 @@
 	ff = only
 [fetch]
 	prune = true
-[include]
-	path = local

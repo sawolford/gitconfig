@@ -2,5 +2,6 @@
 	path = standard
 	path = alias
 	path = diff
+	path = merge
 	path = schemes
-    path = merge
+	path = local
