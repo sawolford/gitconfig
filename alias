@@ -3,10 +3,12 @@
 	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
 	globalhookspath = "!f() { \
-		echo '' >> ~/gitconfig/local; \
-		echo '[core]' >> ~/gitconfig/local; \
-		echo 'hooksPath=\"~/gitconfig/hooks\"' >> ~/gitconfig/local; \
-	}; f"
+		LOCALFILE=~/gitconfig/local; \
+        grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \
+		echo '' >> $LOCALFILE; \
+		echo '[core]' >> $LOCALFILE; \
+        echo '\thooksPath=\"~/gitconfig/hooks\"' >> $LOCALFILE; \
+    }; f"
 	# alias
 	alias = !git config --list | grep alias
 	aliasg = !git config --list | grep alias | grep
