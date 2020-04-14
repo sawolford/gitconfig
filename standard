@@ -7,7 +7,7 @@
 	decorate = short
 	status = auto
 [push]
-	default = tracking
+	default = simple
 [pull]
 	ff = only
 [fetch]

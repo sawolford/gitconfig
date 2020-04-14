@@ -16,46 +16,42 @@
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
 	branches = branch -a
-	branchc = rev-parse --abbrev-ref HEAD
-	branchu = rev-parse --abbrev-ref --symbolic-full-name @{u}
+	branchupstream = rev-parse --abbrev-ref @{u}
+	brancha = branch -a
 	branchd = branch -d
-	brancht = branch -t
-	bcontains = branch --contains
+	branchD = branch -D
+	branchf = branch -f
+	branchl = branch -l
+	branchm = branch -m
+	branchr = branch -r
+	branchu = branch -u
+	branchsc = branch --show-current
+	branchcont = branch --contains
 	# bundle
-	bundlec = "!f() { \
-		git bundle create $1 $2 HEAD~$3..$4; \
-	}; f"
+	bundlec = "!f() { git bundle create $1 $2 HEAD~$3..$4; }; f"
 	bundlev = bundle verify
-	bundlef = "!f() { \
-		git fetch $1 $2:$(basename $1)-$2; \
-	}; f"
+	bundlef = "!f() { git fetch $1 $2:$(basename $1)-$2; }; f"
 	# diff
 	dtk = difftool --tool=kdiff3 -y
 	dtm = difftool --tool=meld -y
 	dti = difftool --tool=icdiff -y
 	dtv = difftool --tool=vimdiff -y
-	diffc = diff --cached
-	dtkc = difftool --tool=kdiff3 -y --cached
-	dtmc = difftool --tool=meld -y --cached
-	dtic = difftool --tool=icdiff -y --cached
-	dtvc = difftool --tool=vimdiff -y --cached
-	dtkr = "!f() { \
-		git difftool --tool=kdiff3 -y $1^..$1; \
-	}; f"
-	dtmr = "!f() { \
-		git difftool --tool=meld -y $1^..$1; \
-	}; f"
-	dtir = "!f() { \
-		git difftool --tool=icdiff -y $1^..$1; \
-	}; f"
-	dtvr = "!f() { \
-		git difftool --tool=vimdiff -y $1^..$1; \
-	}; f"
+	diffs = diff --staged
+	dtks = difftool --tool=kdiff3 -y --staged
+	dtms = difftool --tool=meld -y --staged
+	dtis = difftool --tool=icdiff -y --staged
+	dtvs = difftool --tool=vimdiff -y --staged
+	dtkr = "!f() { git difftool --tool=kdiff3 -y $1^..$1; }; f"
+	dtmr = "!f() { git difftool --tool=meld -y $1^..$1; }; f"
+	dtir = "!f() { git difftool --tool=icdiff -y $1^..$1; }; f"
+	dtvr = "!f() { git difftool --tool=vimdiff -y $1^..$1; }; f"
 	# glog
 	glv = log --graph --pretty=short --left-right
 	glva = glv --all --reflog
-	glt = log --graph --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s' --abbrev-commit --left-right
+	glt = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
 	glta = !git glt --all --reflog
+	glti = !git fetch && git glt ..@{u}
+	glto = !git fetch && git glt @{u}..
 	glt1 = !git glt -n 1
 	glta1 = !git glta -n 1
 	glt5 = !git glt -n 5
@@ -72,6 +68,8 @@
 	cii = commit --interactive
 	co = checkout
 	di = diff
+	dis = diff --staged
+	dir = "!f() { git diff $1^..$1; }; f"
 	heads = show-ref --heads
 	in = !git fetch && git log --left-right ..@{u}
 	incoming = !git fetch && git log --left-right ..@{u}
@@ -92,6 +90,7 @@
 	mergem = mergetool --tool=meld -y
 	mergek = mergetool --tool=kdiff3 -y
 	# misc
+	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
 	checkpoint = !git ls-files -z | xargs -0 git add
@@ -108,9 +107,7 @@
 	rsoft = reset --soft
 	# strip
 	stripbare = update-ref HEAD HEAD^
-	strip = "!f() { \
-		git reset --hard $1^; \
-	}; f"
+	strip = "!f() { git reset --hard $1^; }; f"
 	dangling = fsck --no-reflogs
 	cleanup = reflog expire --expire=now --all
 	# stash

@@ -1,5 +1,5 @@
 [user]
-	name = <First name> <Last Name>
-	email = <first name>.<last name>@nrl.navy.mil
+	name = <First name> <Last name>
+	email = <first name>.<last name>@example.com
 [include]
 	path = gitconfig/gitconfig

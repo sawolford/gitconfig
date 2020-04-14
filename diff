@@ -3,10 +3,10 @@
 [difftool "icdiff"]
 	cmd = icdiff --head=5000 --highlight --line-numbers -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
 [pager]
-	diffc = true
-	dtmc = false
-	dtic = true
-	dtvc = false
+	diffs = true
+	dtms = false
+	dtis = true
+	dtvs = false
 	dtm = false
 	dti = true
 	dtv = false
