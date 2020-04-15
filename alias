@@ -10,56 +10,60 @@
         echo '\thooksPath=\"~/gitconfig/hooks\"' >> $LOCALFILE; \
     }; f"
 	# alias
-	alias = !git config --list | grep alias
-	aliasg = !git config --list | grep alias | grep
+	al = !git config --list | grep alias
+	alg = !git al | grep
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
 	branches = branch -a
-	branchupstream = rev-parse --abbrev-ref @{u}
-	brancha = branch -a
-	branchd = branch -d
-	branchD = branch -D
-	branchf = branch -f
-	branchl = branch -l
-	branchm = branch -m
-	branchr = branch -r
-	branchu = branch -u
-	branchsc = branch --show-current
-	branchcont = branch --contains
-	# bundle
-	bundlec = "!f() { git bundle create $1 $2 HEAD~$3..$4; }; f"
-	bundlev = bundle verify
-	bundlef = "!f() { git fetch $1 $2:$(basename $1)-$2; }; f"
+	br = branch
+	bra = branch -a
+	brd = branch -d
+	brD = branch -D
+	brf = branch -f
+	brl = branch -l
+	brm = branch -m
+	brr = branch -r
+	bru = branch -u
+	brsc = branch --show-current
+	brcontains = branch --contains
+	brupstream = rev-parse --abbrev-ref @{u}
 	# diff
-	dtk = difftool --tool=kdiff3 -y
-	dtm = difftool --tool=meld -y
-	dti = difftool --tool=icdiff -y
-	dtv = difftool --tool=vimdiff -y
-	diffs = diff --staged
-	dtks = difftool --tool=kdiff3 -y --staged
-	dtms = difftool --tool=meld -y --staged
-	dtis = difftool --tool=icdiff -y --staged
-	dtvs = difftool --tool=vimdiff -y --staged
-	dtkr = "!f() { git difftool --tool=kdiff3 -y $1^..$1; }; f"
-	dtmr = "!f() { git difftool --tool=meld -y $1^..$1; }; f"
-	dtir = "!f() { git difftool --tool=icdiff -y $1^..$1; }; f"
-	dtvr = "!f() { git difftool --tool=vimdiff -y $1^..$1; }; f"
+	di = diff
+	dir = "!f() { git di $1^..$1; }; f"
+	dis = di --staged
+	dt = difftool -y
+	dir = "!f() { git dt $1^..$1; }; f"
+	dts = dt --staged
+	dtk = dt --tool=kdiff3
+	dtm = dt --tool=meld
+	dti = dt --tool=icdiff
+	dtv = dt --tool=vimdiff
+	dts = difftool --staged -y
+	dtks = dts --tool=kdiff3
+	dtms = dts --tool=meld
+	dtis = dts --tool=icdiff
+	dtvs = dts --tool=vimdiff
+	dtkr = "!f() { git dtk $1^..$1; }; f"
+	dtmr = "!f() { git dtm $1^..$1; }; f"
+	dtir = "!f() { git dti $1^..$1; }; f"
+	dtvr = "!f() { git dtv $1^..$1; }; f"
 	# glog
-	glv = log --graph --pretty=short --left-right
-	glva = glv --all --reflog
 	glt = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
-	glta = !git glt --all --reflog
+	glt1 = glt -n 1
+	glt5 = glt -n 5
+	glt10 = glt -n 10
+	glta = glt --all --reflog
+	glta1 = glta -n 1
+	glta5 = glta -n 5
+	glta10 = glta -n 10
+	glv = log --name-status
+	glv1 = glv -n 1
+	glv5 = glv -n 5
+	glv10 = glv -n 10
+	glva = glv --all --reflog
 	glti = !git fetch && git glt ..@{u}
 	glto = !git fetch && git glt @{u}..
-	glt1 = !git glt -n 1
-	glta1 = !git glta -n 1
-	glt5 = !git glt -n 5
-	glta5 = !git glta -n 5
-	glt10 = !git glt -n 10
-	glta10 = !git glta -n 10
-	glv = log --name-status
-	glv1 = !git glv -n 1
 	# hg
 	cob = checkout -b
 	ci = commit
@@ -67,9 +71,6 @@
 	addi = add --interactive
 	cii = commit --interactive
 	co = checkout
-	di = diff
-	dis = diff --staged
-	dir = "!f() { git diff $1^..$1; }; f"
 	heads = show-ref --heads
 	in = !git fetch && git log --left-right ..@{u}
 	incoming = !git fetch && git log --left-right ..@{u}
@@ -79,35 +80,35 @@
 	st = status --short
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
-	showconfig = config --list
-	showconfigg = !git config --list | grep
+	cl = config --list
+	clg = !git cl | grep
 	schemes = !git showconfig | grep ^url
 	manifest = ls-tree -r --name-only --full-tree HEAD
 	# merge
-	mergec = merge --no-ff
-	mergef = merge
-	mergea = merge --abort
-	mergem = mergetool --tool=meld -y
-	mergek = mergetool --tool=kdiff3 -y
+	me = merge
+	mt = mergetool -y
+	menoff = merge --no-ff
+	mea = merge --abort
+	mem = mt --tool=meld
+	mek = mt --tool=kdiff3
 	# misc
 	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
-	checkpoint = !git ls-files -z | xargs -0 git add
 	# push
 	pushuu  = push --set-upstream
-	pushu = !git pushuu origin
+	pushu = pushuu origin
 	pushdd = push --delete 
-	pushd = !git pushdd origin
-	rebasea = rebase --abort
-	rebasec = rebase --continue
+	pushd = pushdd origin
+	rea = rebase --abort
+	rec = rebase --continue
 	# reset
 	rhard = reset --hard
 	rmixed = reset --mixed
 	rsoft = reset --soft
 	# strip
-	stripbare = update-ref HEAD HEAD^
-	strip = "!f() { git reset --hard $1^; }; f"
+	forcestripbare = update-ref HEAD HEAD^
+	forcestrip = "!f() { git reset --hard $1^; }; f"
 	dangling = fsck --no-reflogs
 	cleanup = reflog expire --expire=now --all
 	# stash
@@ -147,13 +148,13 @@
 	stowco = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: stowco <branch>' && return 1; \
 		if ! git stow; then return 1; fi; \
-		git co $1; \
+		git checkout $1; \
 		git unstow; \
 	}; f"
 	stowcob = "!f() { \
 		[ $# -ne 2 ] && echo 'Usage: stowco <branch> <tracking>' && return 1; \
 		if ! git stow; then return 1; fi; \
-		git co -b $1 $2; \
+		git checkout -b $1 $2; \
 		git unstow; \
 	}; f"
 	rebaseto = "!f() { \
@@ -170,9 +171,9 @@
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
-		git co $1; \
+		git checkout $1; \
 		git rebcombine $PREV; \
-		git co $PREV; \
+		git checkout $PREV; \
 		git unstow; \
 	}; f"
 	mergeto = "!f() { \
@@ -181,9 +182,9 @@
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
-		git co $1; \
+		git checkout $1; \
 		if ! git symbolic-ref HEAD; then git switch -; git unstow; echo $1 'would be a detached head'; return 1; fi; \
-		if ! git merge $PREV; then git mtool; git ci; fi; \
+		if ! git merge $PREV; then git mtool; git commit; fi; \
 		git unstow; \
 	}; f"
 	mergefrom = "!f() { \
@@ -192,7 +193,7 @@
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git rev-parse --abbrev-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
-		if ! git merge $1; then git mtool; git ci; fi; \
+		if ! git merge $1; then git mtool; git commit; fi; \
 		git unstow; \
 	}; f"
 	finishto = "!f() { \
@@ -224,7 +225,7 @@
 		if ! git stow; then return 1; fi; \
 		git cherry-pick $1; \
 		git mtool; \
-		git ci; \
+		git commit; \
 		git unstow; \
 	}; f"
 	rewindbase = "!f() { \
@@ -233,7 +234,7 @@
 		if ! git rev-parse --abbrev-ref $1@{u}; then echo 'no upstream branch'; return 1; fi; \
 		UPSTREAM=$(git rev-parse --abbrev-ref $1@{u}); \
 		BASE=$(git merge-base $1 $UPSTREAM); \
-		git branchf $1 $BASE; \
+		git branch -f $1 $BASE; \
 	}; f"
 	backup = "!f() { \
 		bn=$(basename $(pwd)); \
