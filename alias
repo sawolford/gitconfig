@@ -33,7 +33,7 @@
 	dir = "!f() { git di $1^..$1; }; f"
 	dis = di --staged
 	dt = difftool -y
-	dir = "!f() { git dt $1^..$1; }; f"
+	dtr = "!f() { git dt $1^..$1; }; f"
 	dts = dt --staged
 	dtk = dt --tool=kdiff3
 	dtm = dt --tool=meld
@@ -49,21 +49,21 @@
 	dtir = "!f() { git dti $1^..$1; }; f"
 	dtvr = "!f() { git dtv $1^..$1; }; f"
 	# glog
-	glt = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
-	glt1 = glt -n 1
-	glt5 = glt -n 5
-	glt10 = glt -n 10
-	glta = glt --all --reflog
-	glta1 = glta -n 1
-	glta5 = glta -n 5
-	glta10 = glta -n 10
+	gl = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
+	gl1 = gl -n 1
+	gl5 = gl -n 5
+	gl10 = gl -n 10
+	gla = gl --all --reflog
+	gla1 = gla -n 1
+	gla5 = gla -n 5
+	gla10 = gla -n 10
 	glv = log --name-status
 	glv1 = glv -n 1
 	glv5 = glv -n 5
 	glv10 = glv -n 10
 	glva = glv --all --reflog
-	glti = !git fetch && git glt ..@{u}
-	glto = !git fetch && git glt @{u}..
+	gli = !git fetch && git gl ..@{u}
+	glo = !git fetch && git gl @{u}..
 	# hg
 	cob = checkout -b
 	ci = commit
@@ -95,6 +95,10 @@
 	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
+	uncommit = !git rsoft @^ && git rmixed
+	reapply = "!f() { \
+		git show \"$@\" | git apply --reject -R; \
+	}; f"
 	# push
 	pushuu  = push --set-upstream
 	pushu = pushuu origin
@@ -117,6 +121,31 @@
 	stlist = stash list
 	stshow = stash show
 	stdrop = stash drop
+	# submodule
+	sm = submodule
+	smupdate = sm update --init
+	smfor = sm foreach
+	smf = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: smf <command>' && return; \
+		git sm foreach \"$@ || true\"; \
+	}; f"
+	smg = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: smg <command>' && return; \
+		git smf \"git $@ || true\"; \
+	}; f"
+	smfa = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: smfa <command>' && return; \
+		$SHELL -c \"$@\"; \
+		git smf \"$@\"; \
+	}; f"
+	smga = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: smga <command>' && return; \
+		$SHELL -c \"git $@\"; \
+		git smg \"$@\"; \
+	}; f"
+	sma = sm add
+	sms = sm summary
+	disub = di --submodule
 	# pullrebase
 	mtool = mergetool -y
 	rebcont = rebase --continue
@@ -254,4 +283,18 @@
 	backuprm = "!f() { \
 		bn=$(basename $(pwd)); \
 		rm -f ../$bn.*.tar; \
+	}; f"
+	branchpullrebase = "!f() { \
+		[ $# -ne 1 ] && echo 'Usage: tooriginbranch <branch>' && return 1; \
+		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		git stowco $1; \
+		git pullrebase; \
+	}; f"
+	masterpullrebase = "!f() { \
+		git branchpullrebase master; \
+	}; f"
+	getrev ="!f() { \
+		REV=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD); \
+		if [ $REV = HEAD ]; then REV=$(git rev-parse HEAD); fi; \
+		echo $REV; \
 	}; f"
