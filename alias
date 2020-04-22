@@ -15,15 +15,10 @@
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
-	branches = branch -a
 	br = branch
 	bra = branch -a
 	brd = branch -d
-	brD = branch -D
-	brf = branch -f
-	brl = branch -l
 	brm = branch -m
-	brr = branch -r
 	bru = branch -u
 	brsc = branch --show-current
 	brcontains = branch --contains
@@ -50,17 +45,8 @@
 	dtvr = "!f() { git dtv $1^..$1; }; f"
 	# glog
 	gl = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
-	gl1 = gl -n 1
-	gl5 = gl -n 5
-	gl10 = gl -n 10
 	gla = gl --all --reflog
-	gla1 = gla -n 1
-	gla5 = gla -n 5
-	gla10 = gla -n 10
 	glv = log --name-status
-	glv1 = glv -n 1
-	glv5 = glv -n 5
-	glv10 = glv -n 10
 	glva = glv --all --reflog
 	gli = !git fetch && git gl ..@{u}
 	glo = !git fetch && git gl @{u}..
@@ -72,9 +58,7 @@
 	cii = commit --interactive
 	co = checkout
 	heads = show-ref --heads
-	in = !git fetch && git log --left-right ..@{u}
 	incoming = !git fetch && git log --left-right ..@{u}
-	out = !git fetch && git log --left-right @{u}..
 	outgoing = !git fetch && git log --left-right @{u}..
 	paths = remote -v
 	st = status --short
@@ -87,18 +71,12 @@
 	# merge
 	me = merge
 	mt = mergetool -y
-	menoff = merge --no-ff
 	mea = merge --abort
-	mem = mt --tool=meld
-	mek = mt --tool=kdiff3
 	# misc
 	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
 	uncommit = !git rsoft @^ && git rmixed
-	reapply = "!f() { \
-		git show \"$@\" | git apply --reject -R; \
-	}; f"
 	# push
 	pushuu  = push --set-upstream
 	pushu = pushuu origin
@@ -116,11 +94,8 @@
 	dangling = fsck --no-reflogs
 	cleanup = reflog expire --expire=now --all
 	# stash
-	stpush = stash
-	stpop = stash pop
 	stlist = stash list
 	stshow = stash show
-	stdrop = stash drop
 	# submodule
 	sm = submodule
 	smupdate = sm update --init
@@ -147,11 +122,10 @@
 	sms = sm summary
 	disub = di --submodule
 	# pullrebase
-	mtool = mergetool -y
 	rebcont = rebase --continue
 	rebskip = rebase --skip
 	combine = "!f() { \
-		git mtool; \
+		git mt; \
 		if test -n "$(git status --porcelain)" 2>/dev/null; then git rebskip; else git rebcont; fi; \
 	}; f"
 	rebcombine = "!f() { \
@@ -170,7 +144,7 @@
 	}; f"
 	unstow = "!f() { \
 		git cherry-pick -n _stow; \
-		git mtool; \
+		git mt; \
 		git reset --mixed; \
 		git branch -D _stow; \
 	}; f"
@@ -213,7 +187,7 @@
 		if ! git stow; then return 1; fi; \
 		git checkout $1; \
 		if ! git symbolic-ref HEAD; then git switch -; git unstow; echo $1 'would be a detached head'; return 1; fi; \
-		if ! git merge $PREV; then git mtool; git commit; fi; \
+		if ! git merge $PREV; then git mt; git commit; fi; \
 		git unstow; \
 	}; f"
 	mergefrom = "!f() { \
@@ -222,7 +196,7 @@
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git rev-parse --abbrev-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
-		if ! git merge $1; then git mtool; git commit; fi; \
+		if ! git merge $1; then git mt; git commit; fi; \
 		git unstow; \
 	}; f"
 	finishto = "!f() { \
@@ -253,7 +227,7 @@
 		[ $# -ne 1 ] && echo 'Usage: rebasefrom <revision(s)>' && return 1; \
 		if ! git stow; then return 1; fi; \
 		git cherry-pick $1; \
-		git mtool; \
+		git mt; \
 		git commit; \
 		git unstow; \
 	}; f"
@@ -292,9 +266,4 @@
 	}; f"
 	masterpullrebase = "!f() { \
 		git branchpullrebase master; \
-	}; f"
-	getrev ="!f() { \
-		REV=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD); \
-		if [ $REV = HEAD ]; then REV=$(git rev-parse HEAD); fi; \
-		echo $REV; \
 	}; f"
