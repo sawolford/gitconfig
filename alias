@@ -25,29 +25,28 @@
 	brupstream = rev-parse --abbrev-ref @{u}
 	# diff
 	di = diff
-	dir = "!f() { git di $1^..$1; }; f"
-	dis = di --staged
 	dt = difftool -y
+	dtk = !git dt --tool=kdiff3
+	dtm = !git dt --tool=meld
+	dti = !git dt --tool=icdiff
+	dtv = !git dt --tool=vimdiff
+	dis = !git di --staged
+	dts = !git dt --staged -y
+	dtks = !git dts --tool=kdiff3
+	dtms = !git dts --tool=meld
+	dtis = !git dts --tool=icdiff
+	dtvs = !git dts --tool=vimdiff
+	dir = "!f() { git di $1^..$1; }; f"
 	dtr = "!f() { git dt $1^..$1; }; f"
-	dts = dt --staged
-	dtk = dt --tool=kdiff3
-	dtm = dt --tool=meld
-	dti = dt --tool=icdiff
-	dtv = dt --tool=vimdiff
-	dts = difftool --staged -y
-	dtks = dts --tool=kdiff3
-	dtms = dts --tool=meld
-	dtis = dts --tool=icdiff
-	dtvs = dts --tool=vimdiff
 	dtkr = "!f() { git dtk $1^..$1; }; f"
 	dtmr = "!f() { git dtm $1^..$1; }; f"
 	dtir = "!f() { git dti $1^..$1; }; f"
 	dtvr = "!f() { git dtv $1^..$1; }; f"
 	# glog
 	gl = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
-	gla = gl --all --reflog
+	gla = !git gl --all --reflog
 	glv = log --name-status
-	glva = glv --all --reflog
+	glva = !git glv --all --reflog
 	gli = !git fetch && git gl ..@{u}
 	glo = !git fetch && git gl @{u}..
 	# hg
@@ -79,9 +78,9 @@
 	uncommit = !git rsoft @^ && git rmixed
 	# push
 	pushuu  = push --set-upstream
-	pushu = pushuu origin
+	pushu = !git pushuu origin
 	pushdd = push --delete 
-	pushd = pushdd origin
+	pushd = !git pushdd origin
 	rea = rebase --abort
 	rec = rebase --continue
 	# reset
@@ -98,8 +97,8 @@
 	stshow = stash show
 	# submodule
 	sm = submodule
-	smupdate = sm update --init
-	smfor = sm foreach
+	smupdate = !git sm update --init
+	smfor = !git sm foreach
 	smf = "!f() { \
 		[ $# -ne 1 ] && echo 'Usage: smf <command>' && return; \
 		git sm foreach \"$@ || true\"; \
@@ -118,9 +117,9 @@
 		$SHELL -c \"git $@\"; \
 		git smg \"$@\"; \
 	}; f"
-	sma = sm add
-	sms = sm summary
-	disub = di --submodule
+	sma = !git sm add
+	sms = !git sm summary
+	disub = !git di --submodule
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
