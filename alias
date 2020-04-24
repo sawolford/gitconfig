@@ -36,12 +36,12 @@
 	dtms = !git dts --tool=meld
 	dtis = !git dts --tool=icdiff
 	dtvs = !git dts --tool=vimdiff
-	dir = "!f() { git di $1^..$1; }; f"
-	dtr = "!f() { git dt $1^..$1; }; f"
-	dtkr = "!f() { git dtk $1^..$1; }; f"
-	dtmr = "!f() { git dtm $1^..$1; }; f"
-	dtir = "!f() { git dti $1^..$1; }; f"
-	dtvr = "!f() { git dtv $1^..$1; }; f"
+	dir = "!f() { git di ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtr = "!f() { git dt ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtkr = "!f() { git dtk ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtmr = "!f() { git dtm ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
 	# glog
 	gl = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
 	gla = !git gl --all --reflog
