@@ -2,7 +2,7 @@
 	# config
 	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
-	globalhookspath = "!f() { \
+	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local; \
         grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \
 		echo '' >> $LOCALFILE; \
@@ -12,6 +12,20 @@
 	# alias
 	al = !git config --list | grep alias
 	alg = !git al | grep
+	man = "!f() { : git man man; \
+		[ $# -ne 1 ] && echo 'Usage: man command' && return; \
+		command() { sed '/D.*E.*T.*A.*I.*L.*S/q' | sed '$d' | grep -v '^$'; }; \
+		docpath=~/gitconfig/man; \
+		uname -s | grep ^MINGW &>/dev/null && docpath=$(cygpath -m $docpath); \
+		if which man &>/dev/null; then \
+			MANPATH=$MANPATH:$docpath; \
+			man git-$1 | tail -n +2 | command; \
+		elif which pandoc &>/dev/null; then \
+			pandoc -f man \"$docpath/man1/git-$1.1\" -t plain | command; \
+		else \
+			cat \"$docpath/man1/git-$1.1\" | sed 's,^\\.SH ,,' | grep -v '^\\.' | command; \
+		fi; \
+	} ; f"
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
@@ -99,21 +113,21 @@
 	sm = submodule
 	smupdate = !git sm update --init
 	smfor = !git sm foreach
-	smf = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: smf <command>' && return; \
+	smf = "!f() { : git man smf; \
+		[ $# -ne 1 ] && echo 'Usage: smf command' && return; \
 		git sm foreach \"$@ || true\"; \
 	}; f"
-	smg = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: smg <command>' && return; \
+	smg = "!f() { : git man smg; \
+		[ $# -ne 1 ] && echo 'Usage: smg command' && return; \
 		git smf \"git $@ || true\"; \
 	}; f"
-	smfa = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: smfa <command>' && return; \
+	smfa = "!f() { : git man smfa; \
+		[ $# -ne 1 ] && echo 'Usage: smfa command' && return; \
 		$SHELL -c \"$@\"; \
 		git smf \"$@\"; \
 	}; f"
-	smga = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: smga <command>' && return; \
+	smga = "!f() { : git man smga; \
+		[ $# -ne 1 ] && echo 'Usage: smga command' && return; \
 		$SHELL -c \"git $@\"; \
 		git smg \"$@\"; \
 	}; f"
@@ -128,7 +142,7 @@
 		if test -n "$(git status --porcelain)" 2>/dev/null; then git rebskip; else git rebcont; fi; \
 	}; f"
 	rebcombine = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: rebcombine <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: rebcombine branch' && return 1; \
 		if git rebase $1; then return; fi; \
 		while ! git combine; do true; done; \
 	}; f"
@@ -147,29 +161,29 @@
 		git reset --mixed; \
 		git branch -D _stow; \
 	}; f"
-	stowco = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: stowco <branch>' && return 1; \
+	stowco = "!f() { : git man stowco; \
+		[ $# -ne 1 ] && echo 'Usage: stowco branch' && return 1; \
 		if ! git stow; then return 1; fi; \
 		git checkout $1; \
 		git unstow; \
 	}; f"
-	stowcob = "!f() { \
-		[ $# -ne 2 ] && echo 'Usage: stowco <branch> <tracking>' && return 1; \
+	stowcob = "!f() { : git man stowcob; \
+		[ $# -ne 2 ] && echo 'Usage: stowco branch tracking' && return 1; \
 		if ! git stow; then return 1; fi; \
 		git checkout -b $1 $2; \
 		git unstow; \
 	}; f"
-	rebaseto = "!f() { \
+	rebaseto = "!f() { : git man rebaseto; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: rebaseto <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: rebaseto branch' && return 1; \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
 		git rebcombine $1; \
 		git unstow; \
 	}; f"
-	rebasefrom = "!f() { \
+	rebasefrom = "!f() { : git man rebasefrom; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: rebasefrom <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: rebasefrom branch' && return 1; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
@@ -178,9 +192,9 @@
 		git checkout $PREV; \
 		git unstow; \
 	}; f"
-	mergeto = "!f() { \
+	mergeto = "!f() { : git man mergeto; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: mergeto <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: mergeto branch' && return 1; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
@@ -189,56 +203,56 @@
 		if ! git merge $PREV; then git mt; git commit; fi; \
 		git unstow; \
 	}; f"
-	mergefrom = "!f() { \
+	mergefrom = "!f() { : git man mergefrom; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: mergefrom <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: mergefrom branch' && return 1; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git rev-parse --abbrev-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		if ! git stow; then return 1; fi; \
 		if ! git merge $1; then git mt; git commit; fi; \
 		git unstow; \
 	}; f"
-	finishto = "!f() { \
+	finishto = "!f() { : git man finishto; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: finishto <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: finishto branch' && return 1; \
 		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		git rebaseto $1; \
 		git mergeto $1; \
 		git branch -d $PREV; \
 	}; f"
-	finishfrom = "!f() { \
+	finishfrom = "!f() { : git man finishfrom; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: finishfrom <branch>' && return 1; \
+		[ $# -ne 1 ] && echo 'Usage: finishfrom branch' && return 1; \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		git rebasefrom $1; \
 		git mergefrom $1; \
 		git branch -d $1; \
 	}; f"
-	pullrebase = "!f() { \
+	pullrebase = "!f() { : git man pullrebase; \
 		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
 		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return 1; fi; \
 		git fetch; \
 		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
 		git rebaseto $UPSTREAM; \
 	}; f"
-	pickfrom = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: rebasefrom <revision(s)>' && return 1; \
+	pickfrom = "!f() { : git man pickfrom; \
+		[ $# -ne 1 ] && echo 'Usage: pickfrom revision(s)' && return 1; \
 		if ! git stow; then return 1; fi; \
 		git cherry-pick $1; \
 		git mt; \
 		git commit; \
 		git unstow; \
 	}; f"
-	rewindbase = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: rewindbase <source>' && return 1; \
+	rewindbase = "!f() { : git man rewindbase; \
+		[ $# -ne 1 ] && echo 'Usage: rewindbase source' && return 1; \
 		if ! git show-ref $1; then echo $1 'not a named ref'; return 1; fi; \
 		if ! git rev-parse --abbrev-ref $1@{u}; then echo 'no upstream branch'; return 1; fi; \
 		UPSTREAM=$(git rev-parse --abbrev-ref $1@{u}); \
 		BASE=$(git merge-base $1 $UPSTREAM); \
 		git branch -f $1 $BASE; \
 	}; f"
-	backup = "!f() { \
+	backup = "!f() { : git man backup; \
 		bn=$(basename $(pwd)); \
 		ii=0; \
 		while true; do \
@@ -249,20 +263,20 @@
 		tar cf $fn .; \
 		echo $fn; \
 	}; f"
-	backups = "!f() { \
+	backups = "!f() { : git man backups; \
 		bn=$(basename $(pwd)); \
 		ls -ldhtr ../$bn.*.tar; \
 	}; f"
-	backuprm = "!f() { \
+	backuprm = "!f() { : git man backuprm; \
 		bn=$(basename $(pwd)); \
 		rm -f ../$bn.*.tar; \
 	}; f"
-	branchpullrebase = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: tooriginbranch <branch>' && return 1; \
+	branchpullrebase = "!f() { : git man branchpullrebase; \
+		[ $# -ne 1 ] && echo 'Usage: branchpullrebase branch' && return 1; \
 		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
 		git stowco $1; \
 		git pullrebase; \
 	}; f"
-	masterpullrebase = "!f() { \
+	masterpullrebase = "!f() { : git man masterpullrebase; \
 		git branchpullrebase master; \
 	}; f"

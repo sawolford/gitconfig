@@ -12,3 +12,5 @@
 	ff = only
 [fetch]
 	prune = true
+[pager]
+	man = true
