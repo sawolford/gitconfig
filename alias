@@ -1,5 +1,12 @@
 [alias]
 	# config
+	dohtml = !true
+	# helper
+	root = !git rev-parse --show-toplevel
+	ingitbash = !uname -s | grep ^MINGW >/dev/null
+	haveman = !which man >/dev/null 2>&1
+	havepandoc = !which pandoc >/dev/null 2>&1
+	# git
 	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
 	globalhookspath = "!f() { : git man globalhookspath; \
@@ -16,14 +23,20 @@
 		[ $# -ne 1 ] && echo 'Usage: man command' && return; \
 		command() { sed '/D.*E.*T.*A.*I.*L.*S/q' | sed '$d' | grep -v '^$'; }; \
 		docpath=~/gitconfig/man; \
-		uname -s | grep ^MINGW &>/dev/null && docpath=$(cygpath -m $docpath); \
-		if which man &>/dev/null; then \
-			MANPATH=$MANPATH:$docpath; \
+		htmlpath=~/gitconfig/html; \
+		if git ingitbash; then \
+			docpath=$(cygpath -m $docpath); \
+			htmlpath=$(cygpath -m $htmlpath); \
+		fi; \
+		if git dohtml; then \
+			git web--browse \"$htmlpath/git-$1.html\"; \
+		elif git haveman; then \
+			export MANPATH=$docpath; \
 			man git-$1 | tail -n +2 | command; \
-		elif which pandoc &>/dev/null; then \
-			pandoc -f man \"$docpath/man1/git-$1.1\" -t plain | command; \
-		else \
-			cat \"$docpath/man1/git-$1.1\" | sed 's,^\\.SH ,,' | grep -v '^\\.' | command; \
+		elif git havepandoc; then \
+            pandoc -f man \"$docpath/man1/git-$1.1\" -t plain | command; \
+        else \
+            cat \"$docpath/man1/git-$1.1\" | sed 's,^\\.SH ,,' | grep -v '^\\.' | command; \
 		fi; \
 	} ; f"
 	# branch
@@ -253,21 +266,25 @@
 		git branch -f $1 $BASE; \
 	}; f"
 	backup = "!f() { : git man backup; \
+		cd \"$(git root)\"; \
 		bn=$(basename $(pwd)); \
 		ii=0; \
 		while true; do \
-			fn=../$bn.$ii.tar; \
-			[ ! -e $fn ] && break; \
+			fn=$bn.$ii.tar; \
+			[ ! -e ../$fn ] && break; \
 			ii=$((ii + 1)); \
 		done; \
-		tar cf $fn .; \
+		tar cf ../$fn .; \
 		echo $fn; \
 	}; f"
 	backups = "!f() { : git man backups; \
+		cd \"$(git root)\"; \
 		bn=$(basename $(pwd)); \
-		ls -ldhtr ../$bn.*.tar; \
+		cd ..; \
+		ls -ldhtr $bn.*.tar; \
 	}; f"
 	backuprm = "!f() { : git man backuprm; \
+		cd \"$(git root)\"; \
 		bn=$(basename $(pwd)); \
 		rm -f ../$bn.*.tar; \
 	}; f"

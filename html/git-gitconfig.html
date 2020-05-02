@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Scott Wolford" />
+  <title>git alias.gitconfig(1) User manual</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">git alias.gitconfig(1) User manual</h1>
+<p class="author">Scott Wolford</p>
+<p class="date">May, 2020</p>
+</header>
+<h1 id="name">NAME</h1>
+<p>gitconfig</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>gitconfig - gitconfig aliases</p>
+<h1 id="description">DESCRIPTION</h1>
+<ul>
+<li>git backup - create ../$(basename $(pwd)).X.tar, where X increases with each invocation</li>
+<li>git backuprm - remove all backups from previous backup invocations</li>
+<li>git backups - list available backups from previous backup invocations</li>
+<li>git branchpullrebase branch - stow working copy, check out first argument, then execute pullrebase</li>
+<li>git finishfrom branch - rebase from first argument, fast forward merge, then delete first argument</li>
+<li>git finishto branch - rebase to first argument, fast forward merge, then delete first argument</li>
+<li>git globalhookspath - add core.hooksPath to ~/gitconfig/local</li>
+<li>git man command - output the man page for a git command in the best format possible</li>
+<li>git masterpullrebase branch - execute branchpullrebase on master</li>
+<li>git mergefrom branch - stow working copy, merge with first argument, then unstow</li>
+<li>git mergeto branch - stow working copy, merge with first argument, then unstow</li>
+<li>git pickfrom branch - stow working copy, cherrypick changesets, then unstow</li>
+<li>git pullrebase - fetch, then rebase HEAD with its upstream branch</li>
+<li>git rebasefrom branch - stow working copy, rebase first argument onto HEAD, then unstow</li>
+<li>git rebaseto branch - stow working copy, rebase HEAD onto first argument, then unstow</li>
+<li>git rewindbase source - move a branch to the common ancestor with its upstream</li>
+<li>git smf command - iterate over submodules to execute shell command</li>
+<li>git smfa command - iterate over submodules and current directory to execute shell command</li>
+<li>git smg command - iterate over submodules to execute git command</li>
+<li>git smga command - iterate over submodules and current directory to execute git command</li>
+<li>git stowco branch - stow working copy, checkout first argument, then unstow</li>
+<li>git stowcob branch - stow working copy, checkout first argument that tracks second argument, then unstow</li>
+</ul>
+<h1 id="examples">EXAMPLES</h1>
+<ul>
+<li>git backup</li>
+<li>git backuprm</li>
+<li>git backups</li>
+<li>git branchpullrebase branch</li>
+<li>git finishfrom branch</li>
+<li>git finishto $(git brupstream)</li>
+<li>git finishto master</li>
+<li>git globalhookspath</li>
+<li>git man man</li>
+<li>git man rebaseto</li>
+<li>git masterpullrebase branch</li>
+<li>git mergefrom branch</li>
+<li>git mergeto $(git brupstream)</li>
+<li>git mergeto master</li>
+<li>git pickfrom branch</li>
+<li>git pullrebase</li>
+<li>git rebasefrom branch</li>
+<li>git rebaseto $(git brupstream)</li>
+<li>git rebaseto master</li>
+<li>git rewindbase master</li>
+<li>git smf pwd</li>
+<li>git smf “touch .gitignore”</li>
+<li>git smfa pwd</li>
+<li>git smfa “touch .gitignore”</li>
+<li>git smg status</li>
+<li>git smg “remote -v”</li>
+<li>git smga status</li>
+<li>git smga “remote -v”</li>
+<li>git stowco $(git brupstream)</li>
+<li>git stowco master</li>
+<li>git stowcob $(git brupstream)</li>
+<li>git stowcob master</li>
+</ul>
+<h1 id="see-also">SEE ALSO</h1>
+<p>backup backuprm backups branchpullrebase masterpullrebase finishfrom finishto mergefrom mergeto rebasefrom rebaseto pickfrom pullrebase rewindbase smf smfa smg smga stowco stowcob globalhookspath man</p>
+<h1 id="details">DETAILS</h1>
+</body>
+</html>
