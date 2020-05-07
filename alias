@@ -52,11 +52,12 @@
 	brupstream = rev-parse --abbrev-ref @{u}
 	# diff
 	di = diff
-	dt = difftool -y
+	dty = difftool -y
+	dt = !git dty -d
 	dtk = !git dt --tool=kdiff3
 	dtm = !git dt --tool=meld
-	dti = !git dt --tool=icdiff
-	dtv = !git dt --tool=vimdiff
+	dti = !git dty --tool=icdiff
+	dtv = !git dty --tool=vimdiff
 	dis = !git di --staged
 	dts = !git dt --staged -y
 	dtks = !git dts --tool=kdiff3
@@ -281,7 +282,11 @@
 		cd \"$(git root)\"; \
 		bn=$(basename $(pwd)); \
 		cd ..; \
-		ls -ldhtr $bn.*.tar; \
+		if ls -ldhtr $bn.*.tar >/dev/null 2>&1; then \
+			ls -ldhtr $bn.*.tar; \
+		else \
+			echo \"No backups\"; \
+		fi; \
 	}; f"
 	backuprm = "!f() { : git man backuprm; \
 		cd \"$(git root)\"; \

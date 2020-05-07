@@ -1,11 +1,9 @@
 [diff]
-	tool = icdiff
+	tool = meld
+	trustExitCode = true
+[difftool]
+	trustExitCode = true
 [difftool "icdiff"]
 	cmd = icdiff --head=5000 --highlight --line-numbers -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
 [pager]
-	di = true
-	dir = true
-	dis = true
 	dti = true
-	dtir = true
-	dtis = true
