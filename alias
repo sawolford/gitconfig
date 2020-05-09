@@ -3,9 +3,35 @@
 	dohtml = !true
 	# helper
 	root = !git rev-parse --show-toplevel
+	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	ingitbash = !uname -s | grep ^MINGW >/dev/null
 	haveman = !which man >/dev/null 2>&1
 	havepandoc = !which pandoc >/dev/null 2>&1
+	# color
+	ccyan = "!f() { echo \"\\033[96;1;1m\"; }; f"
+	cred = "!f() { echo \"\\033[31;1;1m\"; }; f"
+	cgray = "!f() { echo \"\\033[90;1;1m\"; }; f"
+	cgreen = "!f() { echo \"\\033[92;1;1m\"; }; f"
+	cmagenta = "!f() { echo \"\\033[95;1;1m\"; }; f"
+	cyellow = "!f() { echo \"\\033[93;1;1m\"; }; f"
+	cnone = "!f() { echo \"\\033[0m\"; }; f"
+	# echo
+	echo = "!f() { echo echo; }; f"
+	; echo = "!f() { echo true; }; f"
+	ncols = !echo 80
+	dotshelper = "!f() { printf \"%0.s.\" $($SHELL -c \"echo {1..$1}\"); }; f"
+	dots = "!f() { $(git echo) $(git cgray)$(git dotshelper $(expr $(git ncols) - 6 - $1))$(git cnone); }; f"
+	equalshelper = "!f() { printf \"%0.s=\" $($SHELL -c \"echo {1..$1}\"); }; f"
+	equals = "!f() { $(git echo) $(git cgreen)$(git equalshelper $(expr $(git ncols) - 6 - $1))$(git cnone); }; f"
+	emph = "!f() { $(git echo) $(git cyellow)$*$(git cnone); }; f"
+	error = "!f() { $(git echo) $(git cred)$*$(git cnone); }; f"
+	extra = "!f() { $(git echo) $(git cmagenta)$*$(git cnone); }; f"
+	header = "!f() { $(git echo) $(git cgreen)$*$(git cnone); }; f"
+	info = "!f() { $(git echo) $(git ccyan)$*$(git cnone); }; f"
+	prerror = "!f() { $(git echo) $(git error '!!!' $*); }; f"
+	prextra = "!f() { $(git echo) $(git extra [git $*]); }; f"
+	prheader = "!f() { $(git echo) $(git header '>>>'); }; f"
+	prinfo = "!f() { $(git echo) $(git info '---'); }; f"
 	# git
 	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
@@ -20,7 +46,7 @@
 	al = !git config --list | grep alias
 	alg = !git al | grep
 	man = "!f() { : git man man; \
-		[ $# -ne 1 ] && echo 'Usage: man command' && return; \
+		[ $# -ne 1 ] && echo Usage: man command && return; \
 		command() { sed '/D.*E.*T.*A.*I.*L.*S/q' | sed '$d' | grep -v '^$'; }; \
 		docpath=~/gitconfig/man; \
 		htmlpath=~/gitconfig/html; \
@@ -128,20 +154,20 @@
 	smupdate = !git sm update --init
 	smfor = !git sm foreach
 	smf = "!f() { : git man smf; \
-		[ $# -ne 1 ] && echo 'Usage: smf command' && return; \
+		[ $# -ne 1 ] && echo Usage: smf command && return; \
 		git sm foreach \"$@ || true\"; \
 	}; f"
 	smg = "!f() { : git man smg; \
-		[ $# -ne 1 ] && echo 'Usage: smg command' && return; \
+		[ $# -ne 1 ] && echo Usage: smg command && return; \
 		git smf \"git $@ || true\"; \
 	}; f"
 	smfa = "!f() { : git man smfa; \
-		[ $# -ne 1 ] && echo 'Usage: smfa command' && return; \
+		[ $# -ne 1 ] && echo Usage: smfa command && return; \
 		$SHELL -c \"$@\"; \
 		git smf \"$@\"; \
 	}; f"
 	smga = "!f() { : git man smga; \
-		[ $# -ne 1 ] && echo 'Usage: smga command' && return; \
+		[ $# -ne 1 ] && echo Usage: smga command && return; \
 		$SHELL -c \"git $@\"; \
 		git smg \"$@\"; \
 	}; f"
@@ -151,119 +177,257 @@
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
+	mergetooly = "!f() { \
+		msg=\"mergetooly\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git dots ${#msg}) $(git prextra mergetool -y); \
+		git mergetool -y; \
+	}; f"
 	combine = "!f() { \
-		git mt; \
-		if test -n "$(git status --porcelain)" 2>/dev/null; then git rebskip; else git rebcont; fi; \
+		git mergetooly; \
+		if test -n "$(git status --porcelain)" 2>/dev/null; then \
+			msg=\"rebase skip\"; \
+			$(git echo) $(git prinfo) $msg $(git dots ${msg}) $(git prextra rebase --skip); \
+			git rebskip; \
+		else \
+			msg=\"rebase continue\"; \
+			$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra rebase --continue); \
+			git rebcont; \
+		fi; \
 	}; f"
 	rebcombine = "!f() { \
-		[ $# -ne 1 ] && echo 'Usage: rebcombine branch' && return 1; \
+		[ $# -ne 1 ] && echo Usage: rebcombine branch && return 1; \
+		msg=\"rebase $1\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra rebase $1); \
 		if git rebase $1; then return; fi; \
 		while ! git combine; do true; done; \
 	}; f"
+	ondH = "!f() { \
+		msg=\"check not on detached HEAD\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra symbolic-ref HEAD); \
+		if ! git symbolic-ref HEAD >/dev/null 2>&1; then \
+			msg=\"detached HEAD\"; \
+			$(git echo) $(git prerror $msg); \
+			return 0; \
+		fi; \
+		return 1; \
+	}; f"
+	sref = "!f() { \
+		msg=\"check target $1 is named ref\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra show-ref $1); \
+		if ! git show-ref $1 >/dev/null 2>&1; then \
+			msg=\"target $1 not named ref\"; \
+			$(git echo) $(git prerror $msg); \
+			return 0; \
+		fi; \
+		return 1; \
+	}; f"
+	rparse = "!f() { \
+		msg=\"check branch $1 is named ref\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra rev-parse --abbrev-ref $1); \
+		if ! git rev-parse --abbrev-ref $1 >/dev/null 2>%1; then \
+			msg=\"branch @{u} not a named ref\"; \
+			$(git echo) $(git prerror $msg); \
+			return 0; \
+		fi; \
+		return 1; \
+	}; f"
+	stowbranch = "!f() { \
+		msg=\"checkout stow branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout -b _stow); \
+		if ! git checkout -b _stow >/dev/null 2>&1; then \
+			msg=\"already stowed\"; \
+			$(git echo) $(git prerror $msg); \
+			return 1; \
+		fi; \
+	}; f"
 	stow = "!f() { \
+		msg=\"stow\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		msg=\"check working copy changes\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra status -s); \
 		[ -z \"$(git status -s)\" ] && return; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git checkout -b _stow; then echo 'already stowed'; return 1; fi; \
-		git add -A; \
-		git commit --no-verify -m stow; \
-		git checkout \"$PREV\"; \
+		if git ondH; then return 1; fi; \
+		PREV=$(git ref); \
+		if ! git stowbranch; then return 1; fi; \
+		msg=\"add working copy changes\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra add -A); \
+		git add -A >/dev/null 2>&1; \
+		msg=\"commit stow branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra commit --no-verify -m stow); \
+		git commit --no-verify -m stow >/dev/null 2>&1; \
+		msg=\"checkout $PREV\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout $PREV); \
+		git checkout $PREV >/dev/null 2>&1; \
 	}; f"
 	unstow = "!f() { \
-		git cherry-pick -n _stow; \
-		git mt; \
+		msg=\"unstow\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		msg=\"cherry-pick changes from stow branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra cherry-pick -n _stow); \
+		git cherry-pick -n _stow >/dev/null 2>&1; \
+		git mergetooly; \
+		msg=\"reset index to working copy\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra reset --mixed); \
 		git reset --mixed; \
-		git branch -D _stow; \
+		msg=\"delete stow branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra branch -D _stow); \
+		git branch -D _stow >/dev/null 2>&1; \
 	}; f"
 	stowco = "!f() { : git man stowco; \
-		[ $# -ne 1 ] && echo 'Usage: stowco branch' && return 1; \
+		msg=\"stowco\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		[ $# -ne 1 ] && echo Usage: stowco branch && return 1; \
 		if ! git stow; then return 1; fi; \
+		msg=\"checkout $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout $1); \
 		git checkout $1; \
 		git unstow; \
 	}; f"
 	stowcob = "!f() { : git man stowcob; \
-		[ $# -ne 2 ] && echo 'Usage: stowco branch tracking' && return 1; \
+		msg=\"stowcob\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		[ $# -ne 2 ] && echo Usage: stowco branch tracking && return 1; \
 		if ! git stow; then return 1; fi; \
+		msg=\"checkout $1 branch tracking $2\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout -b $1 $2); \
 		git checkout -b $1 $2; \
 		git unstow; \
 	}; f"
 	rebaseto = "!f() { : git man rebaseto; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: rebaseto branch' && return 1; \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"rebaseto\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: rebaseto branch && return 1; \
+		if git sref $1; then return 1; fi; \
 		if ! git stow; then return 1; fi; \
 		git rebcombine $1; \
 		git unstow; \
 	}; f"
 	rebasefrom = "!f() { : git man rebasefrom; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: rebasefrom branch' && return 1; \
-		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"rebasefrom\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: rebasefrom branch && return 1; \
+		PREV=$(git ref); \
+		if git sref $1; then return 1; fi; \
 		if ! git stow; then return 1; fi; \
+		msg=\"checkout $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout $1); \
 		git checkout $1; \
 		git rebcombine $PREV; \
+		msg=\"checkout $PREV branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout $PREV); \
 		git checkout $PREV; \
 		git unstow; \
 	}; f"
 	mergeto = "!f() { : git man mergeto; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: mergeto branch' && return 1; \
-		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"mergeto\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: mergeto branch && return 1; \
+		PREV=$(git ref); \
+		if git sref $1; then return 1; fi; \
 		if ! git stow; then return 1; fi; \
+		msg=\"checkout $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra checkout $1); \
 		git checkout $1; \
-		if ! git symbolic-ref HEAD; then git switch -; git unstow; echo $1 'would be a detached head'; return 1; fi; \
-		if ! git merge $PREV; then git mt; git commit; fi; \
+		if git ondH; then git switch -; git unstow; echo $(git prerror $1 would be a detached HEAD); return 1; fi; \
+		msg=\"merge with $PREV branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra merge $PREV); \
+		if ! git merge $PREV; then \
+			git mergetooly; \
+			msg=\"commit\"; \
+			$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra commit); \
+			git commit; \
+		fi; \
 		git unstow; \
 	}; f"
 	mergefrom = "!f() { : git man mergefrom; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: mergefrom branch' && return 1; \
-		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git rev-parse --abbrev-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"mergefrom\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: mergefrom branch && return 1; \
+		PREV=$(git ref); \
+		if git sref $1; then return 1; fi; \
 		if ! git stow; then return 1; fi; \
-		if ! git merge $1; then git mt; git commit; fi; \
+		msg=\"merge with $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra merge $1); \
+		if ! git merge $1; then \
+			git mergetooly; \
+			msg=\"commit\"; \
+			$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra commit); \
+			git commit; \
+		fi; \
 		git unstow; \
 	}; f"
 	finishto = "!f() { : git man finishto; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: finishto branch' && return 1; \
-		PREV=$(git symbolic-ref HEAD | cut -d/ -f3-); \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"finishto\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: finishto branch && return 1; \
+		PREV=$(git ref); \
+		if git sref $1; then return 1; fi; \
+		msg=\"rebase to $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra rebaseto $1); \
 		git rebaseto $1; \
+		msg=\"merge to $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra mergeto $1); \
 		git mergeto $1; \
-		git branch -d $PREV; \
+		msg=\"delete $PREV branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra branch -D $PREV); \
+		git branch -D $PREV; \
 	}; f"
 	finishfrom = "!f() { : git man finishfrom; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		[ $# -ne 1 ] && echo 'Usage: finishfrom branch' && return 1; \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"finishfrom\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		[ $# -ne 1 ] && echo Usage: finishfrom branch && return 1; \
+		if git sref $1; then return 1; fi; \
+		msg=\"rebase from $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra rebasefrom $1); \
 		git rebasefrom $1; \
+		msg=\"merge from $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra mergefrom $1); \
 		git mergefrom $1; \
-		git branch -d $1; \
+		msg=\"delete $1 branch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra branch -D $1); \
+		git branch -D $1; \
 	}; f"
 	pullrebase = "!f() { : git man pullrebase; \
-		if ! git symbolic-ref HEAD; then echo 'on detached head'; return 1; fi; \
-		if ! git rev-parse --abbrev-ref @{u}; then echo 'no upstream branch'; return 1; fi; \
+		msg=\"pullrebase\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		if git ondH; then return 1; fi; \
+		if git rparse @{u}; then return 1; fi; \
+		msg=\"fetch\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra fetch); \
 		git fetch; \
 		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
 		git rebaseto $UPSTREAM; \
 	}; f"
 	pickfrom = "!f() { : git man pickfrom; \
-		[ $# -ne 1 ] && echo 'Usage: pickfrom revision(s)' && return 1; \
+		msg=\"pickfrom\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		[ $# -ne 1 ] && echo Usage: pickfrom revisions && return 1; \
 		if ! git stow; then return 1; fi; \
+		msg=\"cherry-pick $1\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra cherry-pick $1); \
 		git cherry-pick $1; \
-		git mt; \
+		git mergetooly; \
+		msg=\"commit\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra commit); \
 		git commit; \
 		git unstow; \
 	}; f"
 	rewindbase = "!f() { : git man rewindbase; \
-		[ $# -ne 1 ] && echo 'Usage: rewindbase source' && return 1; \
-		if ! git show-ref $1; then echo $1 'not a named ref'; return 1; fi; \
-		if ! git rev-parse --abbrev-ref $1@{u}; then echo 'no upstream branch'; return 1; fi; \
-		UPSTREAM=$(git rev-parse --abbrev-ref $1@{u}); \
-		BASE=$(git merge-base $1 $UPSTREAM); \
+		msg=\"rewindbase\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		[ $# -ne 1 ] && echo Usage: rewindbase source && return 1; \
+		if git sref $1; then return 1; fi; \
+		if git rparse $1@{u}; then return 1; fi; \
+		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
+		BASE=$(git rev-parse --short $(git merge-base $1 $UPSTREAM)); \
+		msg=\"move branch $1 to $BASE\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra branch -f $1 $BASE); \
 		git branch -f $1 $BASE; \
 	}; f"
 	backup = "!f() { : git man backup; \
@@ -285,7 +449,7 @@
 		if ls -ldhtr $bn.*.tar >/dev/null 2>&1; then \
 			ls -ldhtr $bn.*.tar; \
 		else \
-			echo \"No backups\"; \
+			echo No backups; \
 		fi; \
 	}; f"
 	backuprm = "!f() { : git man backuprm; \
@@ -294,11 +458,17 @@
 		rm -f ../$bn.*.tar; \
 	}; f"
 	branchpullrebase = "!f() { : git man branchpullrebase; \
-		[ $# -ne 1 ] && echo 'Usage: branchpullrebase branch' && return 1; \
-		if ! git show-ref $1; then echo 'branch not a named ref'; return 1; fi; \
+		msg=\"branchpullrebase\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		[ $# -ne 1 ] && echo Usage: branchpullrebase branch && return 1; \
+		if git sref $1; then return 1; fi; \
 		git stowco $1; \
 		git pullrebase; \
 	}; f"
 	masterpullrebase = "!f() { : git man masterpullrebase; \
+		msg=\"masterpullrebase\"; \
+		$(git echo) $(git prheader) $(git emph $msg) $(git equals ${#msg}); \
+		msg=\"branch pull rebase on master\"; \
+		$(git echo) $(git prinfo) $msg $(git dots ${#msg}) $(git prextra branchpullrebase master); \
 		git branchpullrebase master; \
 	}; f"
