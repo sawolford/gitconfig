@@ -1,6 +1,7 @@
 [include]
 	path = standard
 	path = alias
+	path = compound
 	path = diff
 	path = merge
 	path = schemes
