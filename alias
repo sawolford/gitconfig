@@ -150,23 +150,27 @@
 	sm = submodule
 	smupdate = !git sm update --init
 	smfor = !git sm foreach
-	smf = "!f() { : git man smf; \
-		[ $# -ne 1 ] && echo Usage: smf command && return; \
-		git sm foreach \"$@ || true\"; \
+	smf = "!f() {											: git man smf; \
+		[ $# -ne 1 ] && echo Usage: smf command && return;	: Ensure proper number of arguments; \
+		git sm foreach \"$@ || true\";						: Iterate and ignore errors; \
+		return 0;											: Return zero; \
 	}; f"
-	smg = "!f() { : git man smg; \
-		[ $# -ne 1 ] && echo Usage: smg command && return; \
-		git smf \"git $@ || true\"; \
+	smg = "!f() {											: git man smg; \
+		[ $# -ne 1 ] && echo Usage: smg command && return;	: Ensure proper number of arguments; \
+		git smf \"git $@ || true\";							: Iterate and ignore errors; \
+		return 0;											: Return zero; \
 	}; f"
-	smfa = "!f() { : git man smfa; \
-		[ $# -ne 1 ] && echo Usage: smfa command && return; \
-		$SHELL -c \"$@\"; \
-		git smf \"$@\"; \
+	smfa = "!f() {											: git man smfa; \
+		[ $# -ne 1 ] && echo Usage: smfa command && return;	: Ensure proper number of arguments; \
+		$SHELL -c \"$@\";									: Execute in container; \
+		git smf \"$@\";										: Iterate and ignore errors; \
+		return 0;											: Return zero; \
 	}; f"
-	smga = "!f() { : git man smga; \
-		[ $# -ne 1 ] && echo Usage: smga command && return; \
-		$SHELL -c \"git $@\"; \
-		git smg \"$@\"; \
+	smga = "!f() {											: git man smga; \
+		[ $# -ne 1 ] && echo Usage: smga command && return;	: Ensure proper number of arguments; \
+		$SHELL -c \"git $@\";								: Execute in container; \
+		git smg \"$@\";										: Iterate and ignore errors; \
+		return 0;											: Return zero; \
 	}; f"
 	sma = !git sm add
 	sms = !git sm summary
@@ -175,280 +179,307 @@
 	rebcont = rebase --continue
 	rebskip = rebase --skip
 	mergetooly = "!f() { \
-		cmd=\"mergetool -y\"; \
-		echo $(git prheader) $(git emph mergetooly) $(git prextra $cmd); \
-		git $cmd; \
+		cmd=\"mergetool -y\";												: Set next command; \
+		echo $(git prheader) $(git emph mergetooly) $(git prextra $cmd);	: Output next command; \
+		git $cmd; rv=$?;													: Call mergetool; \
+		return $rv;															: Return error code; \
 	}; f"
 	combine = "!f() { \
-		git mergetooly; \
-		if test -n "$(git status --porcelain)" 2>/dev/null; then \
-			cmd=\"rebase --skip\"; \
-			echo $(git prinfo) rebase skip $(git prextra $cmd); \
-			git $cmd; \
-		else \
-			cmd=\"rebase --continue\"; \
-			echo $(git prinfo) rebase continue $(git prextra $cmd); \
-			git $cmd; \
-		fi; \
+		git mergetooly;												: Call mergetooly alias; \
+		if test -n "$(git status --porcelain)" 2>/dev/null; then	: Check there are no local modifications; \
+			cmd=\"rebase --skip\";									: Set next command; \
+			echo $(git prinfo) rebase skip $(git prextra $cmd);		: Output next command; \
+			git $cmd; rv=$?;										: Skip this rebase step; \
+		else														: Else there are local modifications; \
+			cmd=\"rebase --continue\";								: Set next command; \
+			echo $(git prinfo) rebase continue $(git prextra $cmd);	: Output next command; \
+			git $cmd; rv=$?;										: Continue this rebase; \
+		fi;															: Close if statement; \
+		return $rv;													: Return error code; \
 	}; f"
 	rebcombine = "!f() { \
-		[ $# -ne 1 ] && echo Usage: rebcombine branch && return 1; \
-		cmd=\"rebase $1\"; \
-		echo $(git prinfo) rebase $1 $(git prextra $cmd); \
-		if git $cmd; then return; fi; \
-		while ! git combine; do true; done; \
+		[ $# -ne 1 ] && echo Usage: rebcombine branch && return 1;	: Ensure proper number of arguments; \
+		cmd=\"rebase $1\";											: Set next command; \
+		echo $(git prinfo) rebase $1 $(git prextra $cmd);			: Output next command; \
+		if git $cmd; then return; fi;								: Call rebase; \
+		while ! git combine; do true; done;							: Call combine alias repeatedly; \
+		return 0;													: Return zero; \
 	}; f"
-	ondH = "!f() { \
-		cmd=\"symbolic-ref HEAD\"; \
-		echo $(git prinfo) check not on detached HEAD $(git prextra $cmd); \
-		if ! git $cmd >/dev/null 2>&1; then \
-			echo $(git prerror detached HEAD); \
-			return 0; \
-		fi; \
-		return 1; \
+	attached = "!f() { \
+		cmd=\"symbolic-ref HEAD\";											: Set next command; \
+		echo $(git prinfo) check not on detached HEAD $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then									: Check not on detached HEAD; \
+			echo $(git prerror detached HEAD);								: Output error that on detached HEAD; \
+			return 1;														: Return zero; \
+		fi;																	: Close if statement; \
+		return 0;															: Return one; \
 	}; f"
 	sref = "!f() { \
-		cmd=\"show-ref $1\"; \
-		echo $(git prinfo) check target $1 is named ref $(git prextra $cmd); \
-		if ! git $cmd >/dev/null 2>&1; then \
-			echo $(git prerror target $1 not named ref); \
-			return 1; \
-		fi; \
-		return 0; \
+		cmd=\"show-ref $1\";													: Set next command; \
+		echo $(git prinfo) check target $1 is named ref $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then										: Check target is named ref; \
+			echo $(git prerror target $1 not named ref);						: Output error that target is not named ref; \
+			return 1;															: Return one; \
+		fi;																		: Close if statement; \
+		return 0;																: Reutrn zero; \
 	}; f"
 	stowbranch = "!f() { \
-		cmd=\"checkout -b _stow\"; \
-		echo $(git prinfo) checkout stow branch $(git prextra $cmd); \
-		if ! git $cmd >/dev/null 2>&1; then \
-			echo $(git prerror already stowed); \
-			return 1; \
-		fi; \
+		cmd=\"checkout -b _stow\";										: Set next command; \
+		echo $(git prinfo) checkout stow branch $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then								: Checkout stow branch; \
+			echo $(git prerror already stowed);							: Output error that already stowed; \
+			return 1;													: Return one; \
+		fi;																: Close if statement; \
+		return 0;														: Return zero; \
 	}; f"
 	stowcheck = !test -z \"$(git status -s)\" || echo $(git prerror have local modifications) && false
 	stow = "!f() { \
-		echo $(git prheader) $(git emph stow); \
-		cmd=\"status -s\"; \
-		echo $(git prinfo) check working copy changes $(git prextra $cmd); \
-		[ -z \"$(git $cmd)\" ] && return 0; \
-		if git ondH; then return 1; fi; \
-		PREV=$(git ref); \
-		if ! git stowbranch; then return 1; fi; \
-		cmd=\"add -A\"; \
-		echo $(git prinfo) add working copy changes $(git prextra $cmd); \
-		git $cmd >/dev/null 2>&1; \
-		cmd=\"commit --no-verify -m stow\"; \
-		echo $(git prinfo) commit stow branch $(git prextra $cmd); \
-		git $cmd >/dev/null 2>&1; \
-		cmd=\"checkout $PREV\"; \
-		echo $(git prinfo) checkout $PREV $(git prextra $cmd); \
-		git $cmd >/dev/null 2>&1; \
+		echo $(git prheader) $(git emph stow);								: Output command header; \
+		cmd=\"status -s\";													: Set next command; \
+		echo $(git prinfo) check working copy changes $(git prextra $cmd);	: Output next command; \
+		[ -z \"$(git $cmd)\" ] && return 0;									: Check to see if there are local changes; \
+		if ! git attached; then return 1; fi;								: Ensure that HEAD is not detached HEAD; \
+		PREV=$(git ref);													: Store ref of HEAD; \
+		if ! git stowbranch; then return 1; fi;								: Ensure that nothing is already stowed and checks out temporary _stow branch; \
+		cmd=\"add -A\";														: Set next command; \
+		echo $(git prinfo) add working copy changes $(git prextra $cmd);	: Output next command; \
+		git $cmd >/dev/null 2>&1;											: Add all local changes to Index; \
+		cmd=\"commit --no-verify -m stow\";									: Set next command; \
+		echo $(git prinfo) commit stow branch $(git prextra $cmd);			: Output next command; \
+		git $cmd >/dev/null 2>&1;											: Commit Index, ignoring pre-commit checks; \
+		cmd=\"checkout $PREV\";												: Set next command; \
+		echo $(git prinfo) checkout $PREV $(git prextra $cmd);				: Output next command; \
+		git $cmd >/dev/null 2>&1;											: Check out previous HEAD; \
+		return 0;															: Return zero; \
 	}; f"
 	unstow = "!f() { \
-		echo $(git prheader) $(git emph unstow); \
-		cmd=\"cherry-pick -n _stow\"; \
-		echo $(git prinfo) cherry-pick changes from stow branch $(git prextra $cmd); \
-		git $cmd >/dev/null 2>&1; \
-		git mergetooly; \
-		cmd=\"reset --mixed\"; \
-		echo $(git prinfo) reset index to working copy $(git prextra $cmd); \
-		git $cmd; \
-		cmd=\"branch -D _stow\"; \
-		echo $(git prinfo) delete stow branch $(git prextra $cmd); \
-		git $cmd >/dev/null 2>&1; \
+		echo $(git prheader) $(git emph unstow);										: Output command header; \
+		cmd=\"cherry-pick -n _stow\";													: Set next command; \
+		echo $(git prinfo) cherry-pick changes from stow branch $(git prextra $cmd);	: Output next command; \
+		git $cmd >/dev/null 2>&1;														: Grab changes made by previous stow command; \
+		git mergetooly;																	: Merge those changes with current HEAD; \
+		cmd=\"reset --mixed\";															: Set next command; \
+		echo $(git prinfo) reset index to working copy $(git prextra $cmd);				: Output next command; \
+		git $cmd;																		: Reset changes back into Workspace; \
+		cmd=\"branch -D _stow\";														: Set next command; \
+		echo $(git prinfo) delete stow branch $(git prextra $cmd);						: Output next command; \
+		git $cmd >/dev/null 2>&1;														: Delete temporary _stow branch; \
+		return 0;																		: Return zero; \
 	}; f"
-	stowco = "!f() { : git man stowco; \
-		echo $(git prheader) $(git emph stowco); \
-		[ $# -ne 1 ] && echo Usage: stowco branch && return 1; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"checkout $1\"; \
-		echo $(git prinfo) checkout $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		git unstow; \
+	stowco = "!f() {												: git man stowco; \
+		echo $(git prheader) $(git emph stowco);					: Output command header; \
+		[ $# -ne 1 ] && echo Usage: stowco branch && return 1;		: Ensure proper number of arguments; \
+		if ! git stow; then return 1; fi;							: Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout $1\";										: Set next command; \
+		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;													: Check out target branch; \
+		git unstow;													: Call unstow alias to restore Workspace to former condition; \
+		return 0;													: Return zero; \
 	}; f"
-	stowcob = "!f() { : git man stowcob; \
-		echo $(git prheader) $(git emph stowcob); \
-		[ $# -ne 2 ] && echo Usage: stowco branch tracking && return 1; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"checkout -b $1 $2\"; \
-		echo $(git prinfo) checkout $1 branch tracking $2 $(git prextra $cmd); \
-		git $cmd; \
-		git unstow; \
+	stowcob = "!f() {															: git man stowcob; \
+		echo $(git prheader) $(git emph stowcob);								: Output command header; \
+		[ $# -ne 2 ] && echo Usage: stowco branch tracking && return 1;			: Ensure proper number of arguments; \
+		if ! git stow; then return 1; fi;										: Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout -b $1 $2\";												: Set next command; \
+		echo $(git prinfo) checkout $1 branch tracking $2 $(git prextra $cmd);	: Output next command; \
+		git $cmd;																: Check out target branch with proper tracking branch; \
+		git unstow;																: Call unstow alias to restore Workspace to former condition; \
+		return 0;																: Return zero; \
 	}; f"
-	rebaseto = "!f() { : git man rebaseto; \
-		echo $(git prheader) $(git emph rebaseto); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: rebaseto branch && return 1; \
-		if ! git sref $1; then return 1; fi; \
-		if ! git stow; then return 1; fi; \
-		git rebcombine $1; \
-		git unstow; \
+	rebaseto = "!f() {												: git man rebaseto; \
+		echo $(git prheader) $(git emph rebaseto);					: Output command header; \
+		if ! git attached; then return 1; fi;						: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: rebaseto branch && return 1;	: Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;						: Ensure that provided argument is associated with branch; \
+		if ! git stow; then return 1; fi;							: Call stow alias to temporarily store Workspace; \
+		git rebcombine $1;											: Call rebcombine alias to repeatedly merge changesets; \
+		git unstow;													: Call unstow alias to restore Workspace to former condition; \
+		return 0;													: Return zero; \
 	}; f"
-	rebasefrom = "!f() { : git man rebasefrom; \
-		echo $(git prheader) $(git emph rebasefrom); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: rebasefrom branch && return 1; \
-		PREV=$(git ref); \
-		if ! git sref $1; then return 1; fi; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"checkout $1\"; \
-		echo $(git prinfo) checkout $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		git rebcombine $PREV; \
-		cmd=\"checkout $PREV\"; \
-		echo $(git prinfo) checkout $PREV branch $(git prextra $cmd); \
-		git $cmd; \
-		git unstow; \
+	rebasefrom = "!f() {												: git man rebasefrom; \
+		echo $(git prheader) $(git emph rebasefrom);					: Output command header; \
+		if ! git attached; then return 1; fi;							: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: rebasefrom branch && return 1;		: Ensure proper number of arguments; \
+		PREV=$(git ref);												: Store ref of HEAD; \
+		if ! git sref $1; then return 1; fi;							: Ensure that provided argument is associated with branch; \
+		if ! git stow; then return 1; fi;								: Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout $1\";											: Set next command; \
+		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);		: Output next command; \
+		git $cmd;														: Check out source branch; \
+		git rebcombine $PREV;											: Call rebcombine alias to repeatedly merge changesets; \
+		cmd=\"checkout $PREV\";											: Set next command; \
+		echo $(git prinfo) checkout $PREV branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;														: Check out previous HEAD; \
+		git unstow;														: Call unstow alias to restore Workspace to former condition; \
+		return 0;														: Return zero; \
 	}; f"
-	mergeto = "!f() { : git man mergeto; \
-		echo $(git prheader) $(git emph mergeto); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: mergeto branch && return 1; \
-		PREV=$(git ref); \
-		if ! git sref $1; then return 1; fi; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"checkout $1\"; \
-		echo $(git prinfo) checkout $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		if git ondH; then git switch -; git unstow; echo $(git prerror $1 would be a detached HEAD); return 1; fi; \
-		cmd=\"merge $PREV\"; \
-		echo $(git prinfo) merge with $PREV branch $(git prextra $cmd); \
-		if ! git $cmd; then \
-			git mergetooly; \
-			cmd=\"commit\"; \
-			echo $(git prinfo) commit $(git prextra $cmd); \
-			git $cmd; \
-		fi; \
-		git unstow; \
+	mergeto = "!f() {													: git man mergeto; \
+		echo $(git prheader) $(git emph mergeto);						: Output command header; \
+		if ! git attached; then return 1; fi;							: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: mergeto branch && return 1;			: Ensure proper number of arguments; \
+		PREV=$(git ref);												: Store ref of HEAD; \
+		if ! git sref $1; then return 1; fi;							: Ensure that provided argument is associated with branch; \
+		if ! git stow; then return 1; fi;								: Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout $1\";											: Set next command; \
+		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);		: Output next command; \
+		git $cmd;														: Switch to target branch for merging; \
+		if ! git attached; then												: Ensure that new HEAD after switch is not detached HEAD; \
+			git switch -;												: Switch back to prior branch; \
+			git unstow;													: Call unstow alias to restore Workspace to former condition; \
+			echo $(git prerror $1 would be a detached HEAD);			: Output error that target would be detached HEAD; \
+			return 1;													: Return one; \
+		fi;																: Close if statement; \
+		cmd=\"merge $PREV\";											: Set next command; \
+		echo $(git prinfo) merge with $PREV branch $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd; then												: Execute merge; \
+			git mergetooly;												: If there are conflicts; \
+			cmd=\"commit\";												: Call mergetooly alias; \
+			echo $(git prinfo) commit $(git prextra $cmd);				: Set next command; \
+			git $cmd;													: Output next command; \
+		fi;																: Commit merged changeset; \
+		git unstow;														: Call unstow alias to restore Workspace to former condition; \
+		return 0;														: Return zero; \
 	}; f"
-	mergefrom = "!f() { : git man mergefrom; \
-		echo $(git prheader) $(git emph mergefrom); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: mergefrom branch && return 1; \
-		PREV=$(git ref); \
-		if ! git sref $1; then return 1; fi; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"merge $1\"; \
-		echo $(git prinfo) merge with $1 branch $(git prextra $cmd); \
-		if ! git $cmd; then \
-			git mergetooly; \
-			cmd=\"commit\"; \
-			echo $(git prinfo) commit $(git prextra $cmd); \
-			git $cmd; \
-		fi; \
-		git unstow; \
+	mergefrom = "!f() {													: git man mergefrom; \
+		echo $(git prheader) $(git emph mergefrom);						: Output command header; \
+		if ! git attached; then return 1; fi;							: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: mergefrom branch && return 1;		: Ensure proper number of arguments; \
+		PREV=$(git ref);												: Store ref of HEAD; \
+		if ! git sref $1; then return 1; fi;							: Ensure that provided argument is associated with branch; \
+		if ! git stow; then return 1; fi;								: Call stow alias to temporarily store Workspace; \
+		cmd=\"merge $1\";												: Set next command; \
+		echo $(git prinfo) merge with $1 branch $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd; then												: Execute merge; \
+			git mergetooly;												: Call mergetooly alias to resolve conflicts; \
+			cmd=\"commit\";												: Set next command; \
+			echo $(git prinfo) commit $(git prextra $cmd);				: Output next command; \
+			git $cmd;													: Commit merged changeset; \
+		fi;																: Close if statement; \
+		git unstow;														: Call unstow alias to restore Workspace to former condition; \
+		return 0;														: Return zero; \
 	}; f"
-	finishto = "!f() { : git man finishto; \
-		echo $(git prheader) $(git emph finishto); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: finishto branch && return 1; \
-		PREV=$(git ref); \
-		if ! git sref $1; then return 1; fi; \
-		cmd=\"rebaseto $1\"; \
-		echo $(git prinfo) rebase to $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		cmd=\"mergeto $1\"; \
-		echo $(git prinfo) merge to $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		cmd=\"branch -D $PREV\"; \
-		echo $(git prinfo) delete $PREV branch $(git prextra $cmd); \
-		git $cmd; \
+	finishto = "!f() {												: git man finishto; \
+		echo $(git prheader) $(git emph finishto);					: Output command header; \
+		if ! git attached; then return 1; fi;						: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: finishto branch && return 1;	: Ensure proper number of arguments; \
+		PREV=$(git ref);											: Store ref of HEAD so it can be deleted at end; \
+		if ! git sref $1; then return 1; fi;						: Ensure that provided argument is associated with branch; \
+		cmd=\"rebaseto $1\";										: Set next command; \
+		echo $(git prinfo) rebase to $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;													: Call rebaseto alias to rebase changesets to target branch; \
+		cmd=\"mergeto $1\";											: Set next command; \
+		echo $(git prinfo) merge to $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;													: Call mergeto alias to merge HEAD with target branch; \
+		cmd=\"branch -D $PREV\";									: Set next command; \
+		echo $(git prinfo) delete $PREV branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;													: Delete branch since it is no longer needed; \
+		return 0;													: Return zero; \
 	}; f"
-	finishfrom = "!f() { : git man finishfrom; \
-		echo $(git prheader) $(git emph finishfrom); \
-		if git ondH; then return 1; fi; \
-		[ $# -ne 1 ] && echo Usage: finishfrom branch && return 1; \
-		if ! git sref $1; then return 1; fi; \
-		cmd=\"rebasefrom $1\"; \
-		echo $(git prinfo) rebase from $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		cmd=\"mergefrom $1\"; \
-		echo $(git prinfo) merge from $1 branch $(git prextra $cmd); \
-		git $cmd; \
-		cmd=\"branch -D $1\"; \
-		echo $(git prinfo) delete $1 branch $(git prextra $cmd); \
-		git $cmd; \
+	finishfrom = "!f() {												: git man finishfrom; \
+		echo $(git prheader) $(git emph finishfrom);					: Output command header; \
+		if ! git attached; then return 1; fi;							: Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: finishfrom branch && return 1;		: Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;							: Ensure that provided argument is associated with branch; \
+		cmd=\"rebasefrom $1\";											: Set next command; \
+		echo $(git prinfo) rebase from $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;														: Call rebasefrom alias to rebase changesets to source branch; \
+		cmd=\"mergefrom $1\";											: Set next command; \
+		echo $(git prinfo) merge from $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;														: Call mergefrom alias to merge HEAD with source branch; \
+		cmd=\"branch -D $1\";											: Set next command; \
+		echo $(git prinfo) delete $1 branch $(git prextra $cmd);		: Output next command; \
+		git $cmd;														: Delete branch since it is no longer needed; \
+		return 0;														: Return zero; \
 	}; f"
-	pullrebase = "!f() { : git man pullrebase; \
-		echo $(git prheader) $(git emph pullrebase); \
-		if git ondH; then return 1; fi; \
-		cmd=\"rev-parse --abbrev-ref @{u}\"; \
-		echo $(git prinfo) check for upstream on current branch $(git prextra $cmd); \
-		if ! git $cmd >/dev/null 2>&1; then \
-			echo $(git prerror current branch has no upstream); \
-			return 1; \
-		fi; \
-		cmd=\"fetch\"; \
-		echo $(git prinfo) fetch $(git prextra $cmd); \
-		git $cmd; \
-		UPSTREAM=$(git rev-parse --abbrev-ref @{u}); \
-		git rebaseto $UPSTREAM; \
+	pullrebase = "!f() {																: git man pullrebase; \
+		echo $(git prheader) $(git emph pullrebase);									: Output command header; \
+		if ! git attached; then return 1; fi;											: Ensure that HEAD is not detached HEAD; \
+		cmd=\"rev-parse --abbrev-ref @{u}\";											: Set next command; \
+		echo $(git prinfo) check for upstream on current branch $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then												: Ensure that current branch is associated with upstream branch; \
+			echo $(git prerror current branch has no upstream);							: Error if current branch is not associated with upstream branch; \
+			return 1;																	: Return error code; \
+		fi;																				: Close if statement; \
+		cmd=\"fetch\";																	: Set next command; \
+		echo $(git prinfo) fetch $(git prextra $cmd);									: Output next command; \
+		git $cmd;																		: Download changesets from origin remote; \
+		UPSTREAM=$(git rev-parse --abbrev-ref @{u});									: Store upstream branch name associated with HEAD in variable; \
+		git rebaseto $UPSTREAM;															: Call rebaseto alias on upstream branch associated with HEAD; \
+		return 0;																		: Return zero; \
 	}; f"
-	pickfrom = "!f() { : git man pickfrom; \
-		echo $(git prheader) $(git emph pickfrom); \
-		[ $# -ne 1 ] && echo Usage: pickfrom revisions && return 1; \
-		if ! git stow; then return 1; fi; \
-		cmd=\"cherry-pick $1\"; \
-		echo $(git prinfo) cherry-pick $1 $(git prextra $cmd); \
-		git $cmd; \
-		git mergetooly; \
-		cmd=\"commit\"; \
-		echo $(git prinfo) commit $(git prextra $cmd); \
-		git $cmd; \
-		git unstow; \
+	pickfrom = "!f() {												: git man pickfrom; \
+		echo $(git prheader) $(git emph pickfrom);					: Output command header; \
+		[ $# -ne 1 ] && echo Usage: pickfrom revisions && return 1;	: Ensure proper number of arguments; \
+		if ! git stow; then return 1; fi;							: Call stow alias to temporarily store Workspace; \
+		cmd=\"cherry-pick $1\";										: Set next command; \
+		echo $(git prinfo) cherry-pick $1 $(git prextra $cmd);		: Output next command; \
+		git $cmd;													: Grab changes from first argument; \
+		git mergetooly;												: Merge those changes with current HEAD; \
+		cmd=\"commit\";												: Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);				: Output next command; \
+		git $cmd;													: Commit merged changeset; \
+		git unstow;													: Call unstow alias to restore Workspace to former condition; \
+		return 0;													: Return zero; \
 	}; f"
-	rewindbase = "!f() { : git man rewindbase; \
-		echo $(git prheader) $(git emph rewindbase); \
-		[ $# -ne 1 ] && echo Usage: rewindbase source && return 1; \
-		if ! git sref $1; then return 1; fi; \
-		cmd=\"rev-parse --abbrev-ref $1@{u}\"; \
-		echo $(git prinfo) check for upstream on $1 branch $(git prextra $cmd); \
-		if ! git $cmd >/dev/null 2>&1; then \
-			echo $(git prerror branch $1 has no upstream); \
-			return 1; \
-		fi; \
-		UPSTREAM=$(git rev-parse --abbrev-ref $1@{u}); \
-		BASE=$(git rev-parse --short $(git merge-base $1 $UPSTREAM)); \
-		cmd=\"branch -f $1 $BASE\"; \
-		echo $(git prinfo) move branch $1 to $BASE $(git prextra $cmd); \
-		git $cmd; \
+	rewindbase = "!f() {														: git man rewindbase; \
+		echo $(git prheader) $(git emph rewindbase);							: Output command header; \
+		[ $# -ne 1 ] && echo Usage: rewindbase source && return 1;				: Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;									: Ensure that provided argument is associated with branch; \
+		cmd=\"rev-parse --abbrev-ref $1@{u}\";									: Set next command; \
+		echo $(git prinfo) check for upstream on $1 branch $(git prextra $cmd);	: Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then										: Ensure that provided branch is associated with upstream branch; \
+			echo $(git prerror branch $1 has no upstream);						: Error if current branch is not associated with upstream branch; \
+			return 1;															: Return error code; \
+		fi;																		: Close if statement; \
+		UPSTREAM=$(git rev-parse --abbrev-ref $1@{u});							: Store upstream branch name associated with HEAD in variable; \
+		BASE=$(git rev-parse --short $(git merge-base $1 $UPSTREAM));			: Store merge base between provided branch and upstream; \
+		cmd=\"branch -f $1 $BASE\";												: Set next command; \
+		echo $(git prinfo) move branch $1 to $BASE $(git prextra $cmd);			: Output next command; \
+		git $cmd;																: Force provided branch back to common base with upstream; \
+		return 0;																: Return zero; \
 	}; f"
-	backup = "!f() { : git man backup; \
-		cd \"$(git root)\"; \
-		bn=$(basename $(pwd)); \
-		ii=0; \
-		while true; do \
-			fn=$bn.$ii.tar; \
-			[ ! -e ../$fn ] && break; \
-			ii=$((ii + 1)); \
-		done; \
-		tar cf ../$fn .; \
-		echo $fn; \
+	backup = "!f() {					: git man backup;\
+		cd \"$(git root)\";				: Change directory to root; \
+		bn=$(basename $(pwd));			: Get name of folder for backup file name; \
+		ii=0;							: Initialize loop variable; \
+		while true; do					: Loop until file does not exist; \
+			fn=$bn.$ii.tar;				: Test backup file name; \
+			[ ! -e ../$fn ] && break;	: Test if backup file exists; \
+			ii=$((ii + 1));				: Increment loop variable; \
+		done;							: Close while loop; \
+		tar cf ../$fn .;				: Tar entire folder; \
+		echo $fn;						: Output new backup file name; \
+		return 0;						: Return zero; \
 	}; f"
-	backups = "!f() { : git man backups; \
-		cd \"$(git root)\"; \
-		bn=$(basename $(pwd)); \
-		cd ..; \
-		if ls -ldhtr $bn.*.tar >/dev/null 2>&1; then \
-			ls -ldhtr $bn.*.tar; \
-		else \
-			echo No backups; \
-		fi; \
+	backups = "!f() {									: git man backups; \
+		cd \"$(git root)\";								: Change directory to root; \
+		bn=$(basename $(pwd));							: Get name of folder for backup file names; \
+		cd ..;											: Change directory up one folder; \
+		if ls -ldhtr $bn.*.tar >/dev/null 2>&1; then	: If a backup file exists; \
+			ls -ldhtr $bn.*.tar;						: Output backup file names; \
+		else											: Else backup file does not exist; \
+			echo No backups;							: Output no backups; \
+		fi;												: Close if statement; \
+		return 0;										: Return zero; \
 	}; f"
-	backuprm = "!f() { : git man backuprm; \
-		cd \"$(git root)\"; \
-		bn=$(basename $(pwd)); \
-		rm -f ../$bn.*.tar; \
+	backuprm = "!f() {			: git man backuprm; \
+		cd \"$(git root)\";		: Change directory to root; \
+		bn=$(basename $(pwd));	: Get name of folder for backup file names; \
+		rm -f ../$bn.*.tar;		: Remove all backup files; \
+		return 0;				: Return zero; \
 	}; f"
-	branchpullrebase = "!f() { : git man branchpullrebase; \
-		echo $(git prheader) $(git emph branchpullrebase); \
-		[ $# -ne 1 ] && echo Usage: branchpullrebase branch && return 1; \
-		if ! git sref $1; then return 1; fi; \
-		git stowco $1; \
-		git pullrebase; \
+	branchpullrebase = "!f() {												: git man branchpullrebase; \
+		echo $(git prheader) $(git emph branchpullrebase);					: Output command header; \
+		[ $# -ne 1 ] && echo Usage: branchpullrebase branch && return 1;	: Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;								: Ensure that provided argument is associated with branch; \
+		git stowco $1;														: Call stowco alias; \
+		git pullrebase;														: Call pullrebase alias; \
+		return 0;															: Return zero; \
 	}; f"
-	masterpullrebase = "!f() { : git man masterpullrebase; \
-		echo $(git prheader) $(git emph masterpullrebase); \
-		cmd=\"branchpullrebase master\"; \
-		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd); \
-		git $cmd; \
+	masterpullrebase = "!f() {													: git man masterpullrebase; \
+		echo $(git prheader) $(git emph masterpullrebase);						: Output command header; \
+		cmd=\"branchpullrebase master\";										: Set next command; \
+		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd);	: Output next command; \
+		git $cmd;																: Call branchpullrebase on master; \
+		return 0;																: Return zero; \
 	}; f"
