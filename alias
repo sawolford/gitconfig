@@ -42,7 +42,7 @@
 	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
 	# glog
-	gl = log --graph --abbrev-commit --left-right --pretty=format:'%Cred%h%Creset %C(bold blue)%<(16)%an%Creset %Cgreen%<(16)%cr%Creset %C(auto)%d%Creset %s'
+	gl = log --graph --abbrev-commit --left-right --pretty=pretty
 	gla = !git gl --all --reflog
 	glv = log --name-status
 	glva = !git glv --all --reflog
@@ -62,7 +62,7 @@
 	st = status --short
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
-	cl = config --list
+	cl = config --list --show-origin
 	clg = !git cl | grep
 	schemes = !git showconfig | grep ^url
 	manifest = ls-tree -r --name-only --full-tree HEAD
@@ -104,4 +104,3 @@
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
-	stowcheck = !test -z \"$(git status -s)\" || echo $(git prerror have local modifications) && false

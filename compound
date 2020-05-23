@@ -25,7 +25,7 @@
 	prextra = "!f() { echo $(git extra [git $*]); }; f"
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
-    # hooks
+	# config
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local; \
         grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \
@@ -84,17 +84,17 @@
 		return $rv;															: Return error code; \
 	}; f"
 	combine = "!f() { \
-		git mergetooly;												: Call mergetooly alias; \
-		if test -n "$(git status --porcelain)" 2>/dev/null; then	: Check there are no local modifications; \
-			cmd=\"rebase --skip\";									: Set next command; \
-			echo $(git prinfo) rebase skip $(git prextra $cmd);		: Output next command; \
-			git $cmd; rv=$?;										: Skip this rebase step; \
-		else														: Else there are local modifications; \
-			cmd=\"rebase --continue\";								: Set next command; \
-			echo $(git prinfo) rebase continue $(git prextra $cmd);	: Output next command; \
-			git $cmd; rv=$?;										: Continue this rebase; \
-		fi;															: Close if statement; \
-		return $rv;													: Return error code; \
+		git mergetooly;													: Call mergetooly alias; \
+		if test -n "$(git status -uno --porcelain)" 2>/dev/null; then	: Check there are no local modifications; \
+			cmd=\"rebase --skip\";										: Set next command; \
+			echo $(git prinfo) rebase skip $(git prextra $cmd);			: Output next command; \
+			git $cmd; rv=$?;											: Skip this rebase step; \
+		else															: Else there are local modifications; \
+			cmd=\"rebase --continue\";									: Set next command; \
+			echo $(git prinfo) rebase continue $(git prextra $cmd);		: Output next command; \
+			git $cmd; rv=$?;											: Continue this rebase; \
+		fi;																: Close if statement; \
+		return $rv;														: Return error code; \
 	}; f"
 	rebcombine = "!f() { \
 		[ $# -ne 1 ] && echo Usage: rebcombine branch && return 1;	: Ensure proper number of arguments; \
@@ -130,6 +130,13 @@
 			return 1;													: Return one; \
 		fi;																: Close if statement; \
 		return 0;														: Return zero; \
+	}; f"
+	stowcheck = "!f() { \
+		if [ -n \"$(git status -s)\" ]; then \
+			echo $(git prerror have local modifications); \
+			return 1; \
+		fi; \
+		return 0; \
 	}; f"
 	stow = "!f() { \
 		echo $(git prheader) $(git emph stow);								: Output command header; \

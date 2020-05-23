@@ -4,6 +4,6 @@
 [difftool]
 	trustExitCode = true
 [difftool "icdiff"]
-	cmd = icdiff --head=5000 --highlight --line-numbers -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
+	cmd = icdiff --head=5000 -H -N -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
 [pager]
 	dti = true
