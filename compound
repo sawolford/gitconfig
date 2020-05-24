@@ -26,6 +26,27 @@
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
 	# config
+	repeatstr = "!f() { printf \"%0.s${2:- }\" $($SHELL -c \"echo {1..$1}\"); }; f"
+	genattributes = "!f() { \
+		if [ $# -lt 1 ]; then \
+			echo Usage: genattributes attribute [maxlen]; \
+			return 1; \
+		fi; \
+		command=\"lscaunspecified $1\"; \
+		repl=\": $1: unspecified\"; \
+		if [ $# -gt 1 ]; then \
+			maxlen=$2; \
+		elif git $command >/dev/null 2>&1; then \
+			maxlen=$(git $command | awk '{ print length }' | sort -n | tail -1); \
+			maxlen=$(expr $maxlen - ${#repl} + 2); \
+		else return 0; \
+		fi; \
+		git $command | while read line; do \
+			line=$(echo \"$line\" | sed \"s<$repl<<\"); \
+			left=$(expr $maxlen - ${#line}); \
+			printf '%s%s%s\n' \"$line\" \"$(git repeatstr $left)\" text; \
+		done; \
+	}; f"
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local; \
         grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \

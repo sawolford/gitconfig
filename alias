@@ -8,6 +8,9 @@
 	# alias
 	al = !git config --list | grep alias
 	alg = !git al | grep
+	# attributes
+	lsca = !git ls-files | git check-attr --stdin
+	lscaunspecified = "!f() { git lsca ${1:-text} | grep unspecified; }; f"
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right

@@ -1,6 +1,7 @@
 [core]
-	autocrlf = input
-	excludesFile = ~/.gitignore
+	autocrlf = false
+	excludesFile = ~/gitconfig/ignore
+	attributesFile = ~/gitconfig/attributes
 [color]
 	ui = true
 	decorate = short
