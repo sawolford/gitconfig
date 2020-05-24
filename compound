@@ -47,6 +47,13 @@
 			printf '%s%s%s\n' \"$line\" \"$(git repeatstr $left)\" text; \
 		done; \
 	}; f"
+	forceeol = "!f() { \
+		if [ $# -ne 2 ]; then \
+			echo Usage: forceeol match eol; \
+			exit 1; \
+		fi; \
+		echo \"$1\" text eol=$2 | tee -a .git/info/attributes; \
+	};f "
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local; \
         grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \
@@ -198,6 +205,15 @@
 		if ! git stow; then return 1; fi;							: Call stow alias to temporarily store Workspace; \
 		cmd=\"checkout $1\";										: Set next command; \
 		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);	: Output next command; \
+		git $cmd;													: Check out target branch; \
+		git unstow;													: Call unstow alias to restore Workspace to former condition; \
+		return 0;													: Return zero; \
+	}; f"
+	stowreco = "!f() {												: git man stowco; \
+		echo $(git prheader) $(git emph stowco);					: Output command header; \
+		if ! git stow; then return 1; fi;							: Call stow alias to temporarily store Workspace; \
+		cmd=\"reco\";												: Set next command; \
+		echo $(git prinfo) re-checkout $(git prextra $cmd);			: Output next command; \
 		git $cmd;													: Check out target branch; \
 		git unstow;													: Call unstow alias to restore Workspace to former condition; \
 		return 0;													: Return zero; \
