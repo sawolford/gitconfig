@@ -1,6 +1,5 @@
 [core]
 	autocrlf = input
-	precomposeUnicode = true
 	excludesFile = ~/.gitignore
 [color]
 	ui = true
