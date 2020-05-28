@@ -25,7 +25,7 @@
 	prextra = "!f() { echo $(git extra [git $*]); }; f"
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
-	# config
+	# attributes
 	repeatstr = "!f() { printf \"%0.s${2:- }\" $($SHELL -c \"echo {1..$1}\"); }; f"
 	genattributes = "!f() { \
 		if [ $# -lt 1 ]; then \
@@ -47,6 +47,39 @@
 			printf '%s%s%s\n' \"$line\" \"$(git repeatstr $left)\" text; \
 		done; \
 	}; f"
+	filetype = "!f() { \
+		command() { git ls-files -z | xargs -0 file; }; \
+		if [ $# -gt 0 ]; then command | grep \"$@\"; \
+		else command; fi; \
+	}; f"
+	mimetype = "!f() { \
+		command() { git ls-files -z | xargs -0 file --mime; }; \
+		if [ $# -gt 0 ]; then command | grep \"$@\"; \
+		else command; fi; \
+	}; f"
+	nonascii = "!f() { \
+		if type pcregrep >/dev/null 2>&1; then command=pcregrep; \
+		else command=\"grep -P\"; fi; \
+		$command --color=auto -n \"[^\\x0-\\x7f]\" \"$@\"; \
+	}; f"
+	nonasciiall = "!f() { \
+		git notasciilist | tr \"\n\" \"\\0\" | xargs -0 git nonascii; \
+	}; f"
+	gitbinary = "!f() { \
+		git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat HEAD -- \"$@\" | grep ^- | cut -f 3; \
+	}; f"
+	gittext = "!f() { \
+		git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat HEAD -- \"$@\" | grep -v ^- | cut -f 3; \
+	}; f"
+	charsets = "!f() { \
+		types='binary us-ascii utf-8 iso-8859-1 unknown-8bit utf-16le utf-16be ebcdic'; \
+		maxlen=20; \
+		for type in $types; do \
+			count=$(git mimetype $type | wc -l); \
+			left=$(expr $maxlen - ${#type}); \
+			printf '%s%s%d\n' $type \"$(git repeatstr $left)\" $count; \
+		done; \
+	}; f"
 	forceeol = "!f() { \
 		if [ $# -ne 2 ]; then \
 			echo Usage: forceeol match eol; \
@@ -54,6 +87,7 @@
 		fi; \
 		echo \"$1\" text eol=$2 | tee -a .git/info/attributes; \
 	};f "
+	# config
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local; \
         grep 'hooksPath=\"~/gitconfig/hooks\"' $LOCALFILE >/dev/null && return 1; \

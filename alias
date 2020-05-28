@@ -12,6 +12,8 @@
 	lsca = !git ls-files | git check-attr --stdin
 	lscaunspecified = "!f() { git lsca ${1:-text} | grep unspecified; }; f"
 	reco = !git rm -r . && git reset --hard
+	notascii = !git mimetype -v us-ascii
+	notasciilist = !git notascii | sed 's,:.*,,'
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
@@ -78,7 +80,7 @@
 	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
-	uncommit = !git rsoft @^ && git rmixed
+	uncommit = "!f() { git rsoft @~${1:-1} && git rmixed; }; f"
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin
