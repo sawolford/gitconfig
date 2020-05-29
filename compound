@@ -414,6 +414,45 @@
 		git $cmd;																: Force provided branch back to common base with upstream; \
 		return 0;																: Return zero; \
 	}; f"
+	branchpullrebase = "!f() {												: git man branchpullrebase; \
+		echo $(git prheader) $(git emph branchpullrebase);					: Output command header; \
+		[ $# -ne 1 ] && echo Usage: branchpullrebase branch && return 1;	: Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;								: Ensure that provided argument is associated with branch; \
+		git stowco $1;														: Call stowco alias; \
+		git pullrebase;														: Call pullrebase alias; \
+		return 0;															: Return zero; \
+	}; f"
+	masterpullrebase = "!f() {													: git man masterpullrebase; \
+		echo $(git prheader) $(git emph masterpullrebase);						: Output command header; \
+		cmd=\"branchpullrebase master\";										: Set next command; \
+		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd);	: Output next command; \
+		git $cmd;																: Call branchpullrebase on master; \
+		return 0;																: Return zero; \
+	}; f"
+	# misc
+	uncommit = "!f() { \
+		if ! git stowcheck; then return 1; fi;                                              : Call stowcheck alias to see if workspace is ready; \
+		arg=${1:-1};                                                                        : Get argument to uncommit, default to 1; \
+		if git cat-file -e $arg >/dev/null 2>&1; then hash=$arg;                            : The argument is a hash, so convert it; \
+		else hash=@~$arg; fi;                                                               : The argument is not a hash, so try to make one; \
+		ofile=uncommit.txt;                                                                 : File to store the commit message; \
+		if [ -e $ofile ]; then                                                              : Check to be sure scratch file is available; \
+			echo file $ofile exists, please move;                                           : Output error that scratch file exists; \
+			return 1;                                                                       : Return error code; \
+		fi;                                                                                 : Close if statement; \
+		echo \"# Prior log messages from previous git uncommit are below\" | tee -a $ofile; : Helpful message; \
+		echo | tee -a $ofile;                                                               : Vertical spacing; \
+		git log $hash..@ --format=format:%B | tee -a $ofile;                                : Store the logs of each in the commit message; \
+		git rsoft $hash;                                                                    : Restore changes to the index; \
+		git rmixed;                                                                         : Restore index to the workspace; \
+		return 0;                                                                           : Return zero; \
+	}; f"
+	squash = "!f() { \
+		if git uncommit \"$@\"; then : Forward to uncommit, checking that it is successful; \
+			git recommita;           : Then recommit; \
+			rm -f uncommit.txt;      : Clean up workspace; \
+		fi;                          : Close if statement; \
+	}; f"
 	backup = "!f() {					: git man backup;\
 		cd \"$(git root)\";				: Change directory to root; \
 		bn=$(basename $(pwd));			: Get name of folder for backup file name; \
@@ -443,19 +482,4 @@
 		bn=$(basename $(pwd));	: Get name of folder for backup file names; \
 		rm -f ../$bn.*.tar;		: Remove all backup files; \
 		return 0;				: Return zero; \
-	}; f"
-	branchpullrebase = "!f() {												: git man branchpullrebase; \
-		echo $(git prheader) $(git emph branchpullrebase);					: Output command header; \
-		[ $# -ne 1 ] && echo Usage: branchpullrebase branch && return 1;	: Ensure proper number of arguments; \
-		if ! git sref $1; then return 1; fi;								: Ensure that provided argument is associated with branch; \
-		git stowco $1;														: Call stowco alias; \
-		git pullrebase;														: Call pullrebase alias; \
-		return 0;															: Return zero; \
-	}; f"
-	masterpullrebase = "!f() {													: git man masterpullrebase; \
-		echo $(git prheader) $(git emph masterpullrebase);						: Output command header; \
-		cmd=\"branchpullrebase master\";										: Set next command; \
-		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd);	: Output next command; \
-		git $cmd;																: Call branchpullrebase on master; \
-		return 0;																: Return zero; \
 	}; f"

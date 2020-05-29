@@ -5,6 +5,7 @@
 	# helper
 	root = !git rev-parse --show-toplevel
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
+	name = !git name-rev --name-only
 	# alias
 	al = !git config --list | grep alias
 	alg = !git al | grep
@@ -80,7 +81,8 @@
 	addp = add --patch
 	addu = add -u .
 	rsho = remote set-head origin
-	uncommit = "!f() { git rsoft @~${1:-1} && git rmixed; }; f"
+	recommit = !git commit --allow-empty-message -t uncommit.txt
+	recommita = !git commit --allow-empty-message -t uncommit.txt -a
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin

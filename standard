@@ -1,16 +1,16 @@
-[core]
-	autocrlf = false
-	excludesFile = ~/gitconfig/ignore
 [color]
 	ui = true
 	decorate = short
 	status = auto
-[push]
-	default = simple
-[pull]
-	ff = only
+[core]
+	autocrlf = false
+	excludesFile = ~/gitconfig/ignore
 [fetch]
 	prune = true
 [pager]
 	dtis = true
 	man = true
+[pull]
+	ff = only
+[push]
+	default = simple
