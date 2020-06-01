@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.gitconfig(1) User manual</title>
+  <title>git alias.gitconfig(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -20,9 +19,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.gitconfig(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.gitconfig(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>gitconfig</p>
@@ -30,17 +27,26 @@
 <p>gitconfig - gitconfig aliases</p>
 <h1 id="description">DESCRIPTION</h1>
 <ul>
-<li>git backup - create ../$(basename $(pwd)).X.tar, where X increases with each invocation</li>
+<li>git backup - create $(basename $(pwd)).X.tar, where X increases with each invocation</li>
 <li>git backuprm - remove all backups from previous backup invocations</li>
 <li>git backups - list available backups from previous backup invocations</li>
 <li>git branchpullrebase branch - stow working copy, check out first argument, then execute pullrebase</li>
+<li>git charsets - print number of tracked files of each likely charset</li>
+<li>git filetype - execute unix file command on all tracked files</li>
 <li>git finishfrom branch - rebase from first argument, fast forward merge, then delete first argument</li>
 <li>git finishto branch - rebase to first argument, fast forward merge, then delete first argument</li>
+<li>git forceeol - force a file pattern to have a given eol setting</li>
+<li>git gitbinary - print tracked files that git considers binary</li>
+<li>git gittext - print tracked files that git considers text</li>
 <li>git globalhookspath - add core.hooksPath to ~/gitconfig/local</li>
 <li>git man command - output the man page for a git command in the best format possible</li>
 <li>git masterpullrebase branch - execute branchpullrebase on master</li>
 <li>git mergefrom branch - stow working copy, merge with first argument, then unstow</li>
 <li>git mergeto branch - stow working copy, merge with first argument, then unstow</li>
+<li>git mimetype - execute unix file –mime command on all tracked files</li>
+<li>git nonascii - print non-ascii lines in a grep-like way</li>
+<li>git nonasciiall - print non-ascii lines for all tracked files</li>
+<li>git notasciilist - list all tracked files with non-ascii characters</li>
 <li>git pickfrom branch - stow working copy, cherrypick changesets, then unstow</li>
 <li>git pullrebase - fetch, then rebase HEAD with its upstream branch</li>
 <li>git rebasefrom branch - stow working copy, rebase first argument onto HEAD, then unstow</li>
@@ -50,46 +56,75 @@
 <li>git smfa command - iterate over submodules and current directory to execute shell command</li>
 <li>git smg command - iterate over submodules to execute git command</li>
 <li>git smga command - iterate over submodules and current directory to execute git command</li>
+<li>git squash - squash changesets and recommit</li>
+<li>git stow - save the workspace state</li>
 <li>git stowco branch - stow working copy, checkout first argument, then unstow</li>
 <li>git stowcob branch - stow working copy, checkout first argument that tracks second argument, then unstow</li>
+<li>git stowreco - stow working copy, re-checkout HEAD, then unstow</li>
+<li>git uncommit - uncommit changesets and restore to working copy</li>
+<li>git unstow - restore the workspace state</li>
 </ul>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git backup</li>
-<li>git backuprm</li>
-<li>git backups</li>
-<li>git branchpullrebase branch</li>
-<li>git finishfrom branch</li>
-<li>git finishto $(git brupstream)</li>
-<li>git finishto master</li>
-<li>git globalhookspath</li>
-<li>git man man</li>
-<li>git man rebaseto</li>
-<li>git masterpullrebase branch</li>
-<li>git mergefrom branch</li>
-<li>git mergeto $(git brupstream)</li>
-<li>git mergeto master</li>
-<li>git pickfrom branch</li>
-<li>git pullrebase</li>
-<li>git rebasefrom branch</li>
-<li>git rebaseto $(git brupstream)</li>
-<li>git rebaseto master</li>
-<li>git rewindbase master</li>
-<li>git smf pwd</li>
-<li>git smf “touch .gitignore”</li>
-<li>git smfa pwd</li>
-<li>git smfa “touch .gitignore”</li>
-<li>git smg status</li>
-<li>git smg “remote -v”</li>
-<li>git smga status</li>
-<li>git smga “remote -v”</li>
-<li>git stowco $(git brupstream)</li>
-<li>git stowco master</li>
-<li>git stowcob $(git brupstream)</li>
-<li>git stowcob master</li>
+<li><code>git backup</code></li>
+<li><code>git backuprm</code></li>
+<li><code>git backups</code></li>
+<li><code>git branchpullrebase branch</code></li>
+<li><code>git charsets</code></li>
+<li><code>git filetype</code></li>
+<li><code>git filetype -i ascii</code></li>
+<li><code>git finishfrom branch</code></li>
+<li><code>git finishto $(git brupstream)</code></li>
+<li><code>git forceeol '*.scn' crlf</code></li>
+<li><code>git forceeol '*.sh' lf</code></li>
+<li><code>git finishto $(git brupstream)</code></li>
+<li><code>git finishto master</code></li>
+<li><code>git gitbinary</code></li>
+<li><code>git gitbinary file1 file2</code></li>
+<li><code>git gittext</code></li>
+<li><code>git gittext file1 file2</code></li>
+<li><code>git globalhookspath</code></li>
+<li><code>git man man</code></li>
+<li><code>git man rebaseto</code></li>
+<li><code>git masterpullrebase branch</code></li>
+<li><code>git mergefrom branch</code></li>
+<li><code>git mergeto $(git brupstream)</code></li>
+<li><code>git mergeto master</code></li>
+<li><code>git mimetype</code></li>
+<li><code>git mimetype ascii</code></li>
+<li><code>git nonascii file1 file2</code></li>
+<li><code>git nonasciiall</code></li>
+<li><code>git notasciilist</code></li>
+<li><code>git pickfrom branch</code></li>
+<li><code>git pullrebase</code></li>
+<li><code>git rebasefrom branch</code></li>
+<li><code>git rebaseto $(git brupstream)</code></li>
+<li><code>git rebaseto master</code></li>
+<li><code>git rewindbase master</code></li>
+<li><code>git smf pwd</code></li>
+<li><code>git smf "touch .gitignore"</code></li>
+<li><code>git smfa pwd</code></li>
+<li><code>git smfa "touch .gitignore"</code></li>
+<li><code>git smg status</code></li>
+<li><code>git smg "remote -v"</code></li>
+<li><code>git smga status</code></li>
+<li><code>git smga "remote -v"</code></li>
+<li><code>git squash</code></li>
+<li><code>git squash 2</code></li>
+<li><code>git squash hash</code></li>
+<li><code>git stow</code></li>
+<li><code>git stowco $(git brupstream)</code></li>
+<li><code>git stowco master</code></li>
+<li><code>git stowcob $(git brupstream)</code></li>
+<li><code>git stowcob master</code></li>
+<li><code>git stowreco</code></li>
+<li><code>git uncommit</code></li>
+<li><code>git uncommit 2</code></li>
+<li><code>git uncommit hash</code></li>
+<li><code>git unstow</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
-<p>backup backuprm backups branchpullrebase masterpullrebase finishfrom finishto mergefrom mergeto rebasefrom rebaseto pickfrom pullrebase rewindbase smf smfa smg smga stowco stowcob globalhookspath man</p>
+<p>backup backuprm backups globalhookspath man charsets filetype forceeol gitbinary gittext mimetype nonascii nonasciiall notasciilist finishfrom finishto mergefrom mergeto rebasefrom rebaseto branchpullrebase masterpullrebase pullrebase smf smfa smg smga pickfrom rewindbase squash uncommit stow stowco stowcob stowreco unstow</p>
 <h1 id="details">DETAILS</h1>
 </body>
 </html>

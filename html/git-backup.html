@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.backup(1) User manual</title>
+  <title>git alias.backup(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.backup(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.backup(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git backup</p>
@@ -94,22 +91,23 @@
 <p>git backup is a helper alias to create a backup tar file of the current folder.</p>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git backup</li>
+<li><code>git backup</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
 <p>backups backuprm</p>
 <h1 id="details">DETAILS</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">backup</span> = <span class="st">&quot;!f() { : git man backup; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    cd </span><span class="dt">\&quot;</span><span class="va">$(</span><span class="fu">git</span> root<span class="va">)</span><span class="dt">\&quot;</span><span class="st">; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    bn=</span><span class="va">$(</span><span class="fu">basename</span> <span class="va">$(</span><span class="bu">pwd</span><span class="va">))</span><span class="st">; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    ii=0; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    while true; do \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">        fn=</span><span class="va">$bn</span><span class="st">.</span><span class="va">$ii</span><span class="st">.tar; \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">        [ ! -e ../</span><span class="va">$fn</span><span class="st"> ] &amp;&amp; break; \</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="st">        ii=</span><span class="va">$((</span>ii + 1<span class="va">))</span><span class="st">; \</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    done; \</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    tar cf ../</span><span class="va">$fn</span><span class="st"> .; \</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="st">    echo </span><span class="va">$fn</span><span class="st">; \</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="st">}; f&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">backup</span> = <span class="st">&quot;!f() { : git man backup;\</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    cd </span><span class="dt">\&quot;</span><span class="va">$(</span><span class="fu">git</span> root<span class="va">)</span><span class="dt">\&quot;</span><span class="st">;           : Change directory to root; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    bn=</span><span class="va">$(</span><span class="fu">basename</span> <span class="va">$(</span><span class="bu">pwd</span><span class="va">))</span><span class="st">;        : Get name of folder for backup file name; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    ii=0;                         : Initialize loop variable; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    while true; do                : Loop until file does not exist; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">        fn=</span><span class="va">$bn</span><span class="st">.</span><span class="va">$ii</span><span class="st">.tar;           : Test backup file name; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">        [ ! -e ../</span><span class="va">$fn</span><span class="st"> ] &amp;&amp; break; : Test if backup file exists; \</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">        ii=</span><span class="va">$((</span>ii + 1<span class="va">))</span><span class="st">;           : Increment loop variable; \</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    done;                         : Close while loop; \</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    tar cf ../</span><span class="va">$fn</span><span class="st"> .;              : Tar entire folder; \</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">    echo </span><span class="va">$fn</span><span class="st">;                     : Output new backup file name; \</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="st">    return 0;                     : Return zero; \</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.masterpullrebase(1) User manual</title>
+  <title>git alias.masterpullrebase(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.masterpullrebase(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.masterpullrebase(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git masterpullrebase</p>
@@ -94,13 +91,17 @@
 <p>git masterpullrebase is a helper alias to execute branchpullrebase on master.</p>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git masterpullrebase branch</li>
+<li><code>git masterpullrebase branch</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
 <p>pullrebase branchpullrebase</p>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">masterpullrebase</span> = <span class="st">&quot;!f() { : git man masterpullrebase; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    git branchpullrebase master; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">}; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prheader<span class="va">)</span><span class="st"> </span><span class="va">$(</span><span class="fu">git</span> emph masterpullrebase<span class="va">)</span><span class="st">;                   : Output command header; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">branchpullrebase master</span><span class="dt">\&quot;</span><span class="st">;                                     : Set next command; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> branch pull rebase on master </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">; : Output next command; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    git </span><span class="va">$cmd</span><span class="st">;                                                            : Call branchpullrebase on master; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    return 0;                                                            : Return zero; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

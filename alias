@@ -13,8 +13,7 @@
 	lsca = !git ls-files | git check-attr --stdin
 	lscaunspecified = "!f() { git lsca ${1:-text} | grep unspecified; }; f"
 	reco = !git rm -r . && git reset --hard
-	notascii = !git mimetype -v us-ascii
-	notasciilist = !git notascii | sed 's,:.*,,'
+	notasciilist = !git mimetype -v us-ascii | sed 's,:.*,,'
 	# branch
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right

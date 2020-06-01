@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.rewindbase(1) User manual</title>
+  <title>git alias.rewindbase(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.rewindbase(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.rewindbase(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git rewindbase</p>
@@ -98,21 +95,30 @@
 <li>Ensures that the provided branch is associated with an upstream branch</li>
 <li>Stores the upstream branch name associated with HEAD in a variable</li>
 <li>Finds and stores the merge base between the provided branch and its upstream</li>
-<li>Calls branch -f to force the provided branch pointer back to its common base with its upstream</li>
+<li>Calls branch -f to force the provided branch pointer back to its common base with its upstream</li>
 </ol>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git rewindbase master</li>
+<li><code>git rewindbase master</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">rewindbase</span> = <span class="st">&quot;!f() { : git man rewindbase; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo &#39;Usage: rewindbase source&#39; &amp;&amp; return 1; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    if ! git show-ref </span><span class="va">$1</span><span class="st">; then echo </span><span class="va">$1</span><span class="st"> &#39;not a named ref&#39;; return 1; fi; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    if ! git rev-parse --abbrev-ref </span><span class="va">$1</span><span class="st">@{u}; then echo &#39;no upstream branch&#39;; return 1; fi; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    UPSTREAM=</span><span class="va">$(</span><span class="fu">git</span> rev-parse --abbrev-ref <span class="va">$1</span>@<span class="dt">{u}</span><span class="va">)</span><span class="st">; \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    BASE=</span><span class="va">$(</span><span class="fu">git</span> merge-base <span class="va">$1</span> <span class="va">$UPSTREAM)</span><span class="st">; \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    git branch -f </span><span class="va">$1</span><span class="st"> </span><span class="va">$BASE</span><span class="st">; \</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="st">}; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prheader<span class="va">)</span><span class="st"> </span><span class="va">$(</span><span class="fu">git</span> emph rewindbase<span class="va">)</span><span class="st">;                            : Output command header; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo Usage: rewindbase source &amp;&amp; return 1;              : Ensure proper number of arguments; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    if ! git sref </span><span class="va">$1</span><span class="st">; then return 1; fi;                                    : Ensure that provided argument is associated with branch; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">rev-parse --abbrev-ref </span><span class="va">$1</span><span class="st">@{u}</span><span class="dt">\&quot;</span><span class="st">;                                  : Set next command; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> check for upstream on </span><span class="va">$1</span><span class="st"> branch </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">; : Output next command; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    if ! git </span><span class="va">$cmd</span><span class="st"> &gt;/dev/null 2&gt;&amp;1; then                                     : Ensure that provided branch is associated with upstream branch; \</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">        echo </span><span class="va">$(</span><span class="fu">git</span> prerror branch <span class="va">$1</span> has no upstream<span class="va">)</span><span class="st">;                      : Error if current branch is not associated with upstream branch; \</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">        return 1;                                                           : Return error code; \</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    fi;                                                                     : Close if statement; \</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">    UPSTREAM=</span><span class="va">$(</span><span class="fu">git</span> rev-parse --abbrev-ref <span class="va">$1</span>@<span class="dt">{u}</span><span class="va">)</span><span class="st">;                          : Store upstream branch name associated with HEAD in variable; \</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="st">    BASE=</span><span class="va">$(</span><span class="fu">git</span> rev-parse --short <span class="va">$(</span><span class="fu">git</span> merge-base <span class="va">$1</span> <span class="va">$UPSTREAM))</span><span class="st">;           : Store merge base between provided branch and upstream; \</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">branch -f </span><span class="va">$1</span><span class="st"> </span><span class="va">$BASE</span><span class="dt">\&quot;</span><span class="st">;                                             : Set next command; \</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> move branch </span><span class="va">$1</span><span class="st"> to </span><span class="va">$BASE</span><span class="st"> </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">;         : Output next command; \</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="st">    git </span><span class="va">$cmd</span><span class="st">;                                                               : Force provided branch back to common base with upstream; \</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="st">    return 0;                                                               : Return zero; \</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

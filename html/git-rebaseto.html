@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.rebaseto(1) User manual</title>
+  <title>git alias.rebaseto(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.rebaseto(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.rebaseto(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git rebaseto</p>
@@ -102,19 +99,21 @@
 </ol>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git rebaseto $(git brupstream)</li>
-<li>git rebaseto master</li>
+<li><code>git rebaseto $(git brupstream)</code></li>
+<li><code>git rebaseto master</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
 <p>rebasefrom finishto mergeto</p>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">rebaseto</span> = <span class="st">&quot;!f() { : git man rebaseto; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    if ! git symbolic-ref HEAD; then echo &#39;on detached head&#39;; return 1; fi; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo &#39;Usage: rebaseto branch&#39; &amp;&amp; return 1; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    if ! git show-ref </span><span class="va">$1</span><span class="st">; then echo &#39;branch not a named ref&#39;; return 1; fi; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    if ! git stow; then return 1; fi; \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    git rebcombine </span><span class="va">$1</span><span class="st">; \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    git unstow; \</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="st">}; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prheader<span class="va">)</span><span class="st"> </span><span class="va">$(</span><span class="fu">git</span> emph rebaseto<span class="va">)</span><span class="st">;               : Output command header; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    if ! git attached; then return 1; fi;                    : Ensure that HEAD is not detached HEAD; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo Usage: rebaseto branch &amp;&amp; return 1; : Ensure proper number of arguments; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    if ! git sref </span><span class="va">$1</span><span class="st">; then return 1; fi;                     : Ensure that provided argument is associated with branch; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    if ! git stow; then return 1; fi;                        : Call stow alias to temporarily store Workspace; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    git rebcombine </span><span class="va">$1</span><span class="st">;                                       : Call rebcombine alias to repeatedly merge changesets; \</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">    git unstow;                                              : Call unstow alias to restore Workspace to former condition; \</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    return 0;                                                : Return zero; \</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

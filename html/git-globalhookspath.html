@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.globalhookspath(1) User manual</title>
+  <title>git alias.globalhookspath(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.globalhookspath(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.globalhookspath(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git globalhookspath</p>
@@ -94,15 +91,15 @@
 <p>git globalhookspath is a helper alias to add core.hooksPath=$HOME/gitconfig/hooks to $HOME/gitconfig/local.</p>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git globalhookspath</li>
+<li><code>git globalhookspath</code></li>
 </ul>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">globalhookspath</span> = <span class="st">&quot;!f() { : git man globalhookspath; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">        LOCALFILE=~/gitconfig/local; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">        grep &#39;hooksPath=</span><span class="dt">\&quot;</span><span class="st">~/gitconfig/hooks</span><span class="dt">\&quot;</span><span class="st">&#39; </span><span class="va">$LOCALFILE</span><span class="st"> &gt;/dev/null &amp;&amp; return 1; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">        echo &#39;&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">        echo &#39;[core]&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">; \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">        echo &#39;\thooksPath=</span><span class="dt">\&quot;</span><span class="st">~/gitconfig/hooks</span><span class="dt">\&quot;</span><span class="st">&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">; \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    }; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    LOCALFILE=~/gitconfig/local;                                                 : Filename to write to; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    grep &#39;hooksPath=</span><span class="dt">\&quot;</span><span class="st">~/gitconfig/hooks</span><span class="dt">\&quot;</span><span class="st">&#39; </span><span class="va">$LOCALFILE</span><span class="st"> &gt;/dev/null 2&gt;&amp;1 &amp;&amp; return; : Ensure that config has not already been set; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    echo &#39;&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">;                                                       : Output a newline; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    echo &#39;[core]&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">;                                                 : Output start of section; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    echo &#39;\thooksPath=</span><span class="dt">\&quot;</span><span class="st">~/gitconfig/hooks</span><span class="dt">\&quot;</span><span class="st">&#39; &gt;&gt; </span><span class="va">$LOCALFILE</span><span class="st">;                      : Output hooksPath configuration; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

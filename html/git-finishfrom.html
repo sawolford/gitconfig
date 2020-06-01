@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.finishfrom(1) User manual</title>
+  <title>git alias.finishfrom(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.finishfrom(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.finishfrom(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git finishfrom</p>
@@ -102,18 +99,26 @@
 </ol>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git finishfrom branch</li>
+<li><code>git finishfrom branch</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
 <p>finishto rebasefrom mergefrom</p>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">finishfrom</span> = <span class="st">&quot;!f() { : git man finishfrom; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    if ! git symbolic-ref HEAD; then echo &#39;on detached head&#39;; return 1; fi; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo &#39;Usage: finishfrom branch&#39; &amp;&amp; return 1; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    if ! git show-ref </span><span class="va">$1</span><span class="st">; then echo &#39;branch not a named ref&#39;; return 1; fi; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    git rebasefrom </span><span class="va">$1</span><span class="st">; \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    git mergefrom </span><span class="va">$1</span><span class="st">; \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    git branch -d </span><span class="va">$1</span><span class="st">; \</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="st">}; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prheader<span class="va">)</span><span class="st"> </span><span class="va">$(</span><span class="fu">git</span> emph finishfrom<span class="va">)</span><span class="st">;                  : Output command header; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    if ! git attached; then return 1; fi;                         : Ensure that HEAD is not detached HEAD; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo Usage: finishfrom branch &amp;&amp; return 1;    : Ensure proper number of arguments; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    if ! git sref </span><span class="va">$1</span><span class="st">; then return 1; fi;                          : Ensure that provided argument is associated with branch; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">rebasefrom </span><span class="va">$1</span><span class="dt">\&quot;</span><span class="st">;                                        : Set next command; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> rebase from </span><span class="va">$1</span><span class="st"> branch </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">; : Output next command; \</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">    git </span><span class="va">$cmd</span><span class="st">;                                                     : Call rebasefrom alias to rebase changesets to source branch; \</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">mergefrom </span><span class="va">$1</span><span class="dt">\&quot;</span><span class="st">;                                         : Set next command; \</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> merge from </span><span class="va">$1</span><span class="st"> branch </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">;  : Output next command; \</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">    git </span><span class="va">$cmd</span><span class="st">;                                                     : Call mergefrom alias to merge HEAD with source branch; \</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="st">    cmd=</span><span class="dt">\&quot;</span><span class="st">branch -D </span><span class="va">$1</span><span class="dt">\&quot;</span><span class="st">;                                         : Set next command; \</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">    echo </span><span class="va">$(</span><span class="fu">git</span> prinfo<span class="va">)</span><span class="st"> delete </span><span class="va">$1</span><span class="st"> branch </span><span class="va">$(</span><span class="fu">git</span> prextra <span class="va">$cmd)</span><span class="st">;      : Output next command; \</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="st">    git </span><span class="va">$cmd</span><span class="st">;                                                     : Delete branch since it is no longer needed; \</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="st">    return 0;                                                     : Return zero; \</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="st">}; f&quot;</span></span></code></pre></div>
 </body>
 </html>

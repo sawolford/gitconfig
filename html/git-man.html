@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Scott Wolford" />
-  <title>git alias.man(1) User manual</title>
+  <title>git alias.man(1)</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -82,9 +81,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">git alias.man(1) User manual</h1>
-<p class="author">Scott Wolford</p>
-<p class="date">May, 2020</p>
+<h1 class="title">git alias.man(1)</h1>
 </header>
 <h1 id="name">NAME</h1>
 <p>git man</p>
@@ -94,30 +91,27 @@
 <p>git man is a helper alias to output the man page for a git command in the best format available.</p>
 <h1 id="examples">EXAMPLES</h1>
 <ul>
-<li>git man man</li>
-<li>git man rebaseto</li>
+<li><code>git man man</code></li>
+<li><code>git man rebaseto</code></li>
 </ul>
 <h1 id="see-also">SEE ALSO</h1>
+<p>gitconfig</p>
 <h1 id="details">DETAILS</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">man</span> = <span class="st">&quot;!f() { : git man man; \</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo &#39;Usage: man command&#39; &amp;&amp; return; \</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    command() { sed &#39;/D.*E.*T.*A.*I.*L.*S/q&#39; | sed &#39;</span><span class="va">$d</span><span class="st">&#39; | grep -v &#39;^$&#39;; }; \</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    docpath=~/gitconfig/man; \</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    htmlpath=~/gitconfig/html; \</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    if git ingitbash; then \</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="st">        docpath=</span><span class="va">$(</span><span class="ex">cygpath</span> -m <span class="va">$docpath)</span><span class="st">; \</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="st">        htmlpath=</span><span class="va">$(</span><span class="ex">cygpath</span> -m <span class="va">$htmlpath)</span><span class="st">; \</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    fi; \</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    if git dohtml; then \</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="st">        git web--browse </span><span class="dt">\&quot;</span><span class="va">$htmlpath</span><span class="st">/git-</span><span class="va">$1</span><span class="st">.html</span><span class="dt">\&quot;</span><span class="st">; \</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="st">    elif git haveman; then \</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="st">        export MANPATH=</span><span class="va">$docpath</span><span class="st">; \</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="st">        man git-</span><span class="va">$1</span><span class="st"> | tail -n +2 | command; \</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="st">    elif git havepandoc; then \</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="st">        pandoc -f man </span><span class="dt">\&quot;</span><span class="va">$docpath</span><span class="st">/man1/git-</span><span class="va">$1</span><span class="st">.1</span><span class="dt">\&quot;</span><span class="st"> -t plain | command; \</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="st">    else \</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="st">        cat </span><span class="dt">\&quot;</span><span class="va">$docpath</span><span class="st">/man1/git-</span><span class="va">$1</span><span class="st">.1</span><span class="dt">\&quot;</span><span class="st"> | sed &#39;s,^</span><span class="dt">\\</span><span class="st">.SH ,,&#39; | grep -v &#39;^</span><span class="dt">\\</span><span class="st">.&#39; | command; \</span></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="st">    fi; \</span></span>
-<span id="cb1-20"><a href="#cb1-20"></a><span class="st">} ; f&quot;</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="st">    [ </span><span class="va">$#</span><span class="st"> -ne 1 ] &amp;&amp; echo Usage: man command &amp;&amp; return 1;                                    : Ensure proper number of arguments; \</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="st">    command() { sed &#39;/D.*E.*T.*A.*I.*L.*S/q&#39; | sed &#39;</span><span class="va">$d</span><span class="st">&#39; | grep -v &#39;^$&#39;; };                  : Command to prune off DETAILS section; \</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="st">    docpath=~/gitconfig/man;                                                                : Where man pages are kept; \</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="st">    htmlpath=~/gitconfig/html;                                                              : Where html pages are kept; \</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="st">    if git ingitbash; then                                                                  : Check if using git-bash; \</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="st">        docpath=</span><span class="va">$(</span><span class="ex">cygpath</span> -m <span class="va">$docpath)</span><span class="st">;                                                     : Change to windows path with forward slashes; \</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="st">        htmlpath=</span><span class="va">$(</span><span class="ex">cygpath</span> -m <span class="va">$htmlpath)</span><span class="st">;                                                   : Change to windows path with forward slashes; \</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="st">    fi;                                                                                     : Close if statement; \</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">    if git dohtml; then git web--browse </span><span class="dt">\&quot;</span><span class="va">$htmlpath</span><span class="st">/git-</span><span class="va">$1</span><span class="st">.html</span><span class="dt">\&quot;</span><span class="st">;                          : If should do html, open web browser; \</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="st">    elif git haveman; then                                                                  : If should man pages, then; \</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="st">        export MANPATH=</span><span class="va">$docpath</span><span class="st">;                                                            : Set environment variable for man execution; \</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="st">        man git-</span><span class="va">$1</span><span class="st"> | tail -n +2 | command;                                                  : Execute man without uninteresting parts; \</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="st">    elif git havepandoc; then pandoc -f man </span><span class="dt">\&quot;</span><span class="va">$docpath</span><span class="st">/man1/git-</span><span class="va">$1</span><span class="st">.1</span><span class="dt">\&quot;</span><span class="st"> -t plain | command;  : If pandoc is available, try to output man page; \</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="st">    else cat </span><span class="dt">\&quot;</span><span class="va">$docpath</span><span class="st">/man1/git-</span><span class="va">$1</span><span class="st">.1</span><span class="dt">\&quot;</span><span class="st"> | sed &#39;s,^</span><span class="dt">\\</span><span class="st">.SH ,,&#39; | grep -v &#39;^</span><span class="dt">\\</span><span class="st">.&#39; | command; fi; : Cat the file as a last resort; \</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="st">} ; f&quot;</span></span></code></pre></div>
 </body>
 </html>
