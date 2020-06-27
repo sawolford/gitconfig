@@ -3,6 +3,8 @@
 [mergetool]
     trustExitCode = true
     keepBackup = false
+[mergetool "opendiff"]
+        cmd = opendiff \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\" | cat
 # $LOCAL is the file in the current branch
 # $REMOTE is the file in the branch being merged
 # $MERGED is the partially merged file conflict information

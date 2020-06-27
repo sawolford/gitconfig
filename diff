@@ -1,9 +1,10 @@
 [diff]
 	tool = meld
-	trustExitCode = true
 [difftool]
-	trustExitCode = true
+	trustExitCode = false
 [difftool "icdiff"]
 	cmd = icdiff --head=5000 -H -N -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
+[difftool "opendiff"]
+	cmd = opendiff \"$BASE\" \"$LOCAL\" | cat
 [pager]
 	dti = true

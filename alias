@@ -28,32 +28,40 @@
 	brupstream = rev-parse --abbrev-ref @{u}
 	# diff
 	di = diff
-	dty = difftool -y
-	dt = !git dty -d
-	dtk = !git dt --tool=kdiff3
-	dtm = !git dt --tool=meld
-	dti = !git dty --tool=icdiff
-	dtv = !git dty --tool=vimdiff
-	dis = !git di --staged
-	dtys = difftool --staged -y
-	dts = !git dtys -d
-	dtks = !git dts --tool=kdiff3
-	dtms = !git dts --tool=meld
-	dtis = !git dtys --tool=icdiff
-	dtvs = !git dtys --tool=vimdiff
+	dis = diff --staged
+	dt = difftool -y -d
+	dtd = difftool -y
+	dtk = difftool -y -d --tool=kdiff3
+	dtkd = difftool -y --tool=kdiff3
+	dtm = difftool -y -d --tool=meld
+	dtmd = difftool -y --tool=meld
+	dti = difftool -y --tool=icdiff
+	dtv = difftool -y --tool=vimdiff
+	dts = difftool -y -d --staged
+	dtsd = difftool -y --staged
+	dtks = difftool -y -d --tool=kdiff3 --staged
+	dtksd = difftool -y --tool=kdiff3 --staged
+	dtms = difftool -y -d --tool=meld --staged
+	dtmsd = difftool -y --tool=meld --staged
+	dtis = difftool -y --tool=icdiff --staged
+	dtvs = difftool -y --tool=vimdiff --staged
 	dir = "!f() { git di ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtr = "!f() { git dt ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtkr = "!f() { git dtk ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtmr = "!f() { git dtm ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtkr = "!f() { git dtk -d ${1:-HEAD}^..${1:-HEAD}; }; f"
+	dtmr = "!f() { git dtm -d ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
-	# glog
+	# log
+	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
 	gla = !git gl --all --reflog
 	glv = log --name-status
 	glva = !git glv --all --reflog
 	gli = !git fetch && git gl ..@{u}
 	glo = !git fetch && git gl @{u}..
+	authors = log --format='%aN'
+	authorsreverse = log --format='%aN' --reverse
+	authorssimple = "!f() { git authorsreverse \"$@\" | awk '!visited[$0]++' | tac; }; f"
 	# hg
 	cob = checkout -b
 	ci = commit
