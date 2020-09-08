@@ -4,6 +4,7 @@
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
 	# helper
 	root = !git rev-parse --show-toplevel
+	broot = !git rev-parse --show-toplevel | xargs basename
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
 	# alias
@@ -51,6 +52,7 @@
 	dtmr = "!f() { git dtm -d ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
+	subdiff = diff --submodule=diff
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
@@ -116,6 +118,7 @@
 	sma = !git sm add
 	sms = !git sm summary
 	disub = !git di --submodule
+	lssubmodules = !git ls-files --stage | grep 160000 | cut -c 51-
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
