@@ -110,6 +110,82 @@
 		elif git havepandoc; then pandoc -f man \"$docpath/man1/git-$1.1\" -t plain | command;  : If pandoc is available, try to output man page; \
         else cat \"$docpath/man1/git-$1.1\" | sed 's,^\\.SH ,,' | grep -v '^\\.' | command; fi; : Cat the file as a last resort; \
 	} ; f"
+	# gpg
+	catf = "!f() { git cat-file commit ${1:-HEAD}; }; f"
+	hashes = "!f() { echo $(git log --oneline ${1:-HEAD} --pretty=format:\"%h\"); }; f"
+	gpgpush = "!f() { git push ${1:-origin} refs/notes/gpg; }; f"
+	gpgpull = "!f() { \
+		echo $(git prheader) $(git emph gpgpull);                    : Output command header; \
+		if ! git attached; then return 1; fi;                        : Ensure that HEAD is not detached HEAD; \
+		PREV=$(git ref);                                             : Store ref of HEAD; \
+		cmd=\"checkout refs/notes/gpg\";                             : Set next command; \
+		echo $(git prinfo) checkout gpg $(git prextra $cmd);         : Output next command; \
+		git $cmd >/dev/null 2>&1;                                    : Download changesets from origin remote; \
+		cmd=\"fetch ${1:-origin} refs/notes/gpg:refs/notes/gpg\";    : Set next command; \
+		echo $(git prinfo) fetch gpg $(git prextra $cmd);            : Output next command; \
+		git $cmd >/dev/null 2>&1;                                    : Download changesets from origin remote; \
+		cmd=\"checkout refs/notes/gpg\";                             : Set next command; \
+		echo $(git prinfo) checkout gpg $(git prextra $cmd);         : Output next command; \
+		git $cmd >/dev/null 2>&1;                                    : Download changesets from origin remote; \
+		if ! git stow; then return 1; fi;                            : Call stow alias to temporarily store Workspace; \
+		cmd=\"rebase FETCH_HEAD\";                                   : Set next command; \
+		echo $(git prinfo) rebase gpg $(git prextra $cmd);           : Output next command; \
+		git $cmd;                                                    : Download changesets from origin remote; \
+		for file in $(git diff --name-only --diff-filter=U); do      : ; \
+			git show :2:$file :3:$file > $file;                      : ; \
+		done;                                                        : ; \
+		cmd=\"add .\";                                               : Set next command; \
+		echo $(git prinfo) add concatenated gpg $(git prextra $cmd); : Output next command; \
+		git $cmd;                                                    : Download changesets from origin remote; \
+		cmd=\"commit -m Notes\";                                     : Set next command; \
+		echo $(git prinfo) commit rebase $(git prextra $cmd);        : Output next command; \
+		git $cmd;                                                    : Download changesets from origin remote; \
+		cmd=\"rebase --skip\";                                       : Set next command; \
+		echo $(git prinfo) skip $(git prextra $cmd);                 : Output next command; \
+		git $cmd >/dev/null 2>&1;                                    : Download changesets from origin remote; \
+		cmd=\"update-ref refs/notes/gpg HEAD\";                      : Set next command; \
+		echo $(git prinfo) update-ref on gpg $(git prextra $cmd);    : Output next command; \
+		git $cmd;                                                    : Download changesets from origin remote; \
+		cmd=\"checkout $PREV\";                                      : Set next command; \
+		echo $(git prinfo) checkout $PREV $(git prextra $cmd);       : Output next command; \
+		git $cmd;                                                    : Download changesets from origin remote; \
+		git unstow;                                                  : Call unstow alias to restore Workspace to former condition; \
+		return 0;                                                    : Return zero; \
+	}; f"
+	gpggpg = "!f() { \
+		git catf ${1:-HEAD} | gpg --detach-sign --armor; \
+	}; f"
+	gpgsign = "!f() { \
+		rev=${1:-HEAD}; \
+		git gpggpg $rev | tee /dev/stderr | git notes --ref gpg append -F - $rev; \
+	}; f"
+	gpgunsign = "!f() { \
+		[[ $# -ne 2 ]] && echo Usage: gpgunsign revision pattern && return 1; \
+		rev=$1; \
+		pattern=$2; \
+		git gpgsigns $rev |  awk -v PATTERN=$pattern 'BEGIN { RS=\"-----BEGIN PGP SIGNATURE-----\" } \
+			{ if (!match($0, PATTERN) && match($0, \"END PGP SIGNATURE\")) { print RS; print } }' \
+			| git notes --ref gpg add -f -F - $rev; \
+	}; f"
+	gpgsigns = "!f() { \
+		git notes --ref gpg show ${1:-HEAD}; \
+	}; f"
+	gpgsignkeys = "!f() { \
+		git gpgsigns ${1:-HEAD} | gpg --list-packets | grep ID | sed 's,.*issuer key ID ,,' | sed 's,),,'; \
+	}; f"
+	gpgverify = "!f() { \
+		rev=${1:-HEAD}; \
+		bash -c \"git catf $rev | gpg --verify <(git gpgsigns $rev) -\" 2>&1; \
+	}; f"
+	gpgverifyall = "!f() { : git man gpgverifyall; \
+		rv=\"\"; \
+		for rev in $(git hashes); do \
+			echo \"=== $rev ===\"; \
+			if ! git gpgverify $rev; then rv=\"$rv $rev\"; fi; \
+		done; \
+		echo $rv | tee /dev/stderr >/dev/null; \
+	}; f"
+	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
 	smf = "!f() { : git man smf; \
 		[ $# -lt 1 ] && echo Usage: smf command && return;   : Ensure proper number of arguments; \
