@@ -5,6 +5,7 @@
 	# helper
 	root = !git rev-parse --show-toplevel
 	broot = !git rev-parse --show-toplevel | xargs basename
+	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
 	# alias
@@ -119,6 +120,7 @@
 	sms = !git sm summary
 	disub = !git di --submodule
 	lssubmodules = !git ls-files --stage | grep 160000 | cut -c 51-
+	catsubmodules = config -f .gitmodules -l
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
