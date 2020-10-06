@@ -66,10 +66,10 @@
 		git notasciilist | tr \"\\12\" \"\\0\" | xargs -0 git nonascii; : List all files with non-ascii characters and print those characters; \
 	}; f"
 	gitbinary = "!f() { : git man gitbinary; \
-		git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat HEAD -- \"$@\" | grep ^- | cut -f 3; : List git binary files; \
+		git diff $(git empty) --numstat HEAD -- \"$@\" | grep ^- | cut -f 3; : List git binary files; \
 	}; f"
 	gittext = "!f() { : git man gittext; \
-		git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat HEAD -- \"$@\" | grep -v ^- | cut -f 3; : List git text files; \
+		git diff $(git empty) --numstat HEAD -- \"$@\" | grep -v ^- | cut -f 3; : List git text files; \
 	}; f"
 	charsets = "!f() { : git man charsets; \
 		types='binary us-ascii utf-8 iso-8859-1 unknown-8bit utf-16le utf-16be ebcdic'; : All the charsets likely to be encountered; \
@@ -212,9 +212,10 @@
 		return 0;                                           : Return zero; \
 	}; f"
 	lssubmodulesbr = "!f() { \
+		IFS=\"\n\";                                                        : Use newline as separator; \
 		for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
-			match=submodule.$sub.branch=;                                  : Match branch name; \
-			if git catsubmodules | grep $match >/dev/null 2>&1; then       : If submodule is on a branch; \
+			match=\"submodule.$sub.branch=\";                              : Match branch name; \
+			if git catsubmodules | grep \"$match\" >/dev/null 2>&1; then   : If submodule is on a branch; \
 				bname=$(git catsubmodules | grep $match | sed s,$match,,); : Extract the branch name; \
 				echo $sub=$bname;                                          : Output the submodule and branch info; \
 			else                                                           : Submodule is not on a branch; \
@@ -224,44 +225,54 @@
 		return 0;                                                          : Return zero; \
 	}; f"
 	brsubmodules = "!f() { \
-		if [ $# -gt 0 ]; then                                              : If matching a branch; \
-			for sub in $(git lssubmodules); do                             : Loop over all submodules; \
-				match=submodule.$sub.branch=$1;                            : Match branch name; \
-				if git catsubmodules | grep $match >/dev/null 2>&1; then   : If submodule is on the named branch; \
-					printf \"%s\\12\" $sub;                                : Output the submodule info; \
+		if [ $# -gt 0 ]; then                                                  : If matching a branch; \
+			IFS=\"\n\";                                                        : Use newline as separator; \
+			for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
+				match=\"submodule.$sub.branch=$1\";                            : Match branch name; \
+				if git catsubmodules | grep \"$match\" >/dev/null 2>&1; then   : If submodule is on the named branch; \
+					printf \"%s\\12\" $sub;                                    : Output the submodule info; \
 				fi; \
 			done; \
-		else                                                               : Else not matching a branch; \
-			for sub in $(git lssubmodules); do                             : Loop over all submodules; \
-				match=submodule.$sub.branch;                               : Match no branch name; \
-				if ! git catsubmodules | grep $match >/dev/null 2>&1; then : If submodule is not on a branch; \
-					printf \"%s\\12\" $sub;                                : Output the submodule info; \
+		else                                                                   : Else not matching a branch; \
+			IFS=\"\n\";                                                        : Use newline as separator; \
+			for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
+				match=\"submodule.$sub.branch\";                               : Match no branch name; \
+				if ! git catsubmodules | grep \"$match\" >/dev/null 2>&1; then : If submodule is not on a branch; \
+					printf \"%s\\12\" $sub;                                    : Output the submodule info; \
 				fi; \
 			done; \
 		fi; \
 		return 0;                                                          : Return zero; \
 	}; f"
 	fsmf = "!f() { \
-		[ $# -lt 2 ] && echo Usage: fsmf filter command && return;               : Ensure proper number of arguments; \
-		filter=$(eval $1 | tr \"\\12\" \" \" | tr \" \" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
-		shift;                                                                   : Drop filter from remaining arguments; \
-		if echo $filter | grep ^$ >/dev/null 2>&1; then                          : If filter does not generate any matches ; \
-			git sm foreach true; : Iterate and ignore errors;                    : Iterate and apply noop; \
-		else                                                                     : Else filter matches at least one submodule; \
-			git sm foreach \"case \\$name in $filter) $* ;; esac || true\";      : Iterate with filter and apply command; \
+		[ $# -lt 2 ] && echo Usage: fsmf filter command && return;                  : Ensure proper number of arguments; \
+		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
+		shift;                                                                      : Drop filter from remaining arguments; \
+		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches ; \
+			git sm foreach true;                                                    : Iterate and apply noop; \
+		else                                                                        : Else filter matches at least one submodule; \
+			git sm foreach \"case \\$name in $filter) $* ;; esac || true\";         : Iterate with filter and apply command; \
 		fi; \
-		return 0;                                                                : Return zero; \
+		return 0;                                                                   : Return zero; \
 	}; f"
 	fsmg = "!f() { \
-		[ $# -lt 2 ] && echo Usage: fsmg filter command && return;               : Ensure proper number of arguments; \
-		filter=$(eval $1 | tr \"\\12\" \" \" | tr \" \" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
-		shift;                                                                   : Drop filter from remaining arguments; \
-		if echo $filter | grep ^$ >/dev/null 2>&1; then                          : If filter does not generate any matches; \
-			git sm foreach true;                                                 : Iterate and apply noop; \
-		else                                                                     : Else filter matches at least one submodule; \
-			git sm foreach \"case \\$name in $filter) git $* ;; esac || true\";  : Iterate with filter and apply command; \
+		[ $# -lt 2 ] && echo Usage: fsmg filter command && return;                  : Ensure proper number of arguments; \
+		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
+		shift;                                                                      : Drop filter from remaining arguments; \
+		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches; \
+			git sm foreach true;                                                    : Iterate and apply noop; \
+		else                                                                        : Else filter matches at least one submodule; \
+			git sm foreach \"case \\$name in $filter) git $* ;; esac || true\";     : Iterate with filter and apply command; \
 		fi; \
-		return 0;                                                                : Return zero; \
+		return 0;                                                                   : Return zero; \
+	}; f"
+	cobsubmodules = "!f() { \
+		[ $# -lt 2 ] && echo Usage: cobsubmodules path branch && return;  : Ensure proper number of arguments; \
+		path=\"$1\";                                                      : Set the file system path; \
+		branch=$2;                                                        : Set the branch; \
+		git config --file=.gitmodules \"submodule.$path.branch\" $branch; : Configure the .gitmodules file; \
+		cd \"$path\";                                                     : Cd to submodule; \
+		git cob $branch;                                                  : Checkout the branch; \
 	}; f"
     # pullrebase
 	mergetooly = "!f() { \
