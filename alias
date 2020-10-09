@@ -115,6 +115,9 @@
 	stlist = stash list
 	stshow = stash show
 	# submodule
+	smquiet = !false
+	smflags = !git smquiet && echo --quiet
+	smcolor = !cat
 	sm = submodule
 	smupdate = !git sm update --init
 	smfor = !git sm foreach

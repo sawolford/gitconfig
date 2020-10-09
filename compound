@@ -188,10 +188,10 @@
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
 	smf = "!f() { : git man smf; \
-		[ $# -lt 1 ] && echo Usage: smf command && return;   : Ensure proper number of arguments; \
-		if [ $# -eq 1 ]; then git sm foreach \"$@ || true\"; : Iterate and ignore errors; \
-		else git sm foreach \"$@\"; fi;                      : Iterate; \
-		return 0;                                            : Return zero; \
+		[ $# -lt 1 ] && echo Usage: smf command && return;                                : Ensure proper number of arguments; \
+		if [ $# -eq 1 ]; then git sm $(git smflags) foreach \"$@ || true\" | git smcolor; : Iterate and ignore errors; \
+		else git sm $(git smflags) foreach \"$@\" | git smcolor; fi;                      : Iterate; \
+		return 0;                                                                         : Return zero; \
 	}; f"
 	smg = "!f() { : git man smg; \
 		[ $# -lt 1 ] && echo Usage: smg command && return; : Ensure proper number of arguments; \
@@ -242,27 +242,49 @@
 				fi; \
 			done; \
 		fi; \
-		return 0;                                                          : Return zero; \
+		return 0;                                                              : Return zero; \
 	}; f"
-	fsmf = "!f() { \
+	fismf = "!f() { \
 		[ $# -lt 2 ] && echo Usage: fsmf filter command && return;                  : Ensure proper number of arguments; \
 		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
 		shift;                                                                      : Drop filter from remaining arguments; \
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches ; \
-			git sm foreach true;                                                    : Iterate and apply noop; \
+			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git sm foreach \"case \\$name in $filter) $* ;; esac || true\";         : Iterate with filter and apply command; \
+			git smf \"case \\$name in $filter) $* ;; esac || true\";                : Iterate with filter and apply command; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"
-	fsmg = "!f() { \
+	fismg = "!f() { \
 		[ $# -lt 2 ] && echo Usage: fsmg filter command && return;                  : Ensure proper number of arguments; \
 		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
 		shift;                                                                      : Drop filter from remaining arguments; \
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches; \
-			git sm foreach true;                                                    : Iterate and apply noop; \
+			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git sm foreach \"case \\$name in $filter) git $* ;; esac || true\";     : Iterate with filter and apply command; \
+			git smf \"case \\$name in $filter) git $* ;; esac || true\";            : Iterate with filter and apply command; \
+		fi; \
+		return 0;                                                                   : Return zero; \
+	}; f"
+	fosmf = "!f() { \
+		[ $# -lt 2 ] && echo Usage: fsmf filter command && return;                  : Ensure proper number of arguments; \
+		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
+		shift;                                                                      : Drop filter from remaining arguments; \
+		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches ; \
+			git smf true;                                                           : Iterate and apply noop; \
+		else                                                                        : Else filter matches at least one submodule; \
+			git smf \"case \\$name in $filter) ;; *) $* ;; esac || true\";          : Iterate with filter and apply command; \
+		fi; \
+		return 0;                                                                   : Return zero; \
+	}; f"
+	fosmg = "!f() { \
+		[ $# -lt 2 ] && echo Usage: fsmg filter command && return;                  : Ensure proper number of arguments; \
+		filter=$(eval $1 | sed 's,.*,\"&\",' | tr \"\\12\" \"|\" | sed s,\"|\"$,,); : Filter to convert newlines to pipes; \
+		shift;                                                                      : Drop filter from remaining arguments; \
+		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches; \
+			git smf true;                                                           : Iterate and apply noop; \
+		else                                                                        : Else filter matches at least one submodule; \
+			git smf \"case \\$name in $filter) ;; *) git $* ;; esac || true\";      : Iterate with filter and apply command; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"
