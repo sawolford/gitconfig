@@ -25,6 +25,61 @@
 	prextra = "!f() { echo $(git extra [git $*]); }; f"
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
+	# bundle
+	verifybundle = "!f() { \
+		[ $# -gt 1 ] && echo Usage: verifybundle filename && return 1; : Ensure proper number of arguments; \
+		git bundle verify \"${1:-$(git broot).bundle}\";               : Call git bundle with proper filename; \
+		return 0;                                                      : Return zero; \
+	}; f"
+	removebundle = "!f() { \
+		[ $# -gt 1 ] && echo Usage: removebundle filename && return 1; : Ensure proper number of arguments; \
+		rm \"${1:-$(git broot).bundle}\";                              : Call rm with proper filename; \
+		return 0;                                                      : Return zero; \
+	}; f"
+	createbundle = "!f() { \
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: createbundle since filename && return 1; : Ensure proper number of arguments; \
+		git bundle create \"${2:-$(git broot).bundle}\" --since=\"$1\" --all;            : Call git bundle with proper arguments; \
+		return 0;                                                                        : Return zero; \
+	}; f"
+#		for remote in $(git branch -r | grep -vE \"HEAD|master\"); do \
+	fetchbundle = "!f() { \
+		[ $# -gt 1 ] && echo Usage: fetchbundle filename && return 1; : Ensure proper number of arguments; \
+		git fetch -u \"${1:-$(git broot).bundle}\" \"refs/*:refs/*\"; : Fetch from bundle and keep refs; \
+		git rhard;                                                    : Return working copy to blank slate; \
+		IFS=\"\n\";                                                   : Use newline as separator; \
+		for remote in $(git branch -r | grep -vE \"HEAD\"); do        : Iterate over all remote branches; \
+			git co ${remote#*/};                                      : Checkout local branch corresponding to remote branch; \
+			git branch -u ${remote/  /};                              : Set the upstream for the local branch; \
+		done; \
+		git co master;                                                : Return to master branch; \
+		return 0;                                                     : Return zero; \
+	}; f"
+	combinebundles = "!f() { \
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: combinebundles tarfile rootname && return 1; : Ensure proper number of arguments; \
+		tarfile=\"$1\";                                                                      : Set the output filename; \
+		bname=\"${2:-$(git broot).bundle}\";                                                 : Set the toplevel name; \
+		tar cvf \"$tarfile\" \"$bname\";                                                     : Archive the toplevel bundle; \
+		rm \"$bname\";                                                                       : Remove the toplevel bundle; \
+		IFS=\"\n\";                                                                          : Use newline as separator; \
+		for i in $(git lssubmodules); do                                                     : Iterate over all submodules; \
+			if [ -e \"$i/$i.bundle\" ]; then                                                 : If a bundle exists; \
+				tar rvf \"$tarfile\" \"$i/$i.bundle\";                                       : Add bundle to output file; \
+				rm \"$i/$i.bundle\";                                                         : Remove the bundle; \
+			fi; \
+		done; \
+		return 0;                                                                            : Return zero; \
+	}; f"
+	uncombinebundles = "!f() { \
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: uncombinebundles tarfile rootname && return 1; : Ensure proper number of arguments;\
+		tarfile=\"$1\";                                                                        : Set the input filename; \
+		bname=\"${2:-$(git broot).bundle}\";                                                   : Set the toplevel name; \
+		tar xvf \"$tarfile\" \"$bname\";                                                       : Extract the toplevel bundle; \
+		IFS=\"\n\";                                                                            : Use newline as separator; \
+		for i in $(git lssubmodules); do                                                       : Iterate over all submodules; \
+			tar xvf \"$tarfile\" \"$i/$i.bundle\";                                             : Extract bundle; \
+		done; \
+		return 0;                                                                              : Return zero; \
+	}; f"
 	# attributes
 	repeatstr = "!f() { printf \"%0.s${2:- }\" $($SHELL -c \"echo {1..$1}\"); }; f"
 	genattributes = "!f() { \
@@ -85,7 +140,7 @@
 		if [ $# -ne 2 ]; then echo Usage: forceeol match eol; return 1; fi; : Ensure proper number of arguments; \
 		grep \"$1 text eol=$2\" $LOCALFILE >/dev/null 2>&1 && return;       : Ensure that config has not already been set \
 		echo \"$1\" text eol=$2 | tee -a $LOCALFILE;                        : Write the attribute to the proper local file; \
-	};f "
+	}; f "
 	# config
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local;                                                 : Filename to write to; \
@@ -94,6 +149,11 @@
 		echo '[core]' >> $LOCALFILE;                                                 : Output start of section; \
         echo '\thooksPath=\"~/gitconfig/hooks\"' >> $LOCALFILE;                      : Output hooksPath configuration; \
     }; f"
+	insteadof = "!f() { \
+		LOCALFILE=~/gitconfig/localschemes;                                                 : Filename to write to; \
+		[ $# -ne 2 ] && echo Usage: insteadOf from to && return 1; \
+		git config --file $LOCALFILE url.\"$2\".insteadOf \"$1\"; \
+	}; f"
 	man = "!f() { : git man man; \
 		[ $# -ne 1 ] && echo Usage: man command && return 1;                                    : Ensure proper number of arguments; \
 		command() { sed '/D.*E.*T.*A.*I.*L.*S/q' | sed '$d' | grep -v '^$'; };                  : Command to prune off DETAILS section; \
@@ -188,10 +248,10 @@
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
 	smf = "!f() { : git man smf; \
-		[ $# -lt 1 ] && echo Usage: smf command && return;                                : Ensure proper number of arguments; \
-		if [ $# -eq 1 ]; then git sm $(git smflags) foreach \"$@ || true\" | git smcolor; : Iterate and ignore errors; \
-		else git sm $(git smflags) foreach \"$@\" | git smcolor; fi;                      : Iterate; \
-		return 0;                                                                         : Return zero; \
+		[ $# -lt 1 ] && echo Usage: smf command && return;                  : Ensure proper number of arguments; \
+		if [ $# -eq 1 ]; then git sm $(git smflags) foreach \"$@ || true\"; : Iterate and ignore errors; \
+		else git sm $(git smflags) foreach \"$@\"; fi;                      : Iterate; \
+		return 0;                                                           : Return zero; \
 	}; f"
 	smg = "!f() { : git man smg; \
 		[ $# -lt 1 ] && echo Usage: smg command && return; : Ensure proper number of arguments; \
@@ -201,14 +261,16 @@
 	}; f"
 	smfa = "!f() { : git man smfa; \
 		[ $# -lt 1 ] && echo Usage: smfa command && return; : Ensure proper number of arguments; \
-		$SHELL -c \"$@\";                                   : Execute in container; \
 		git smf \"$@\";                                     : Iterate; \
+		git smquiet || echo Entering \\'.\\';               : Output current path; \
+		eval $@;                                            : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	smga = "!f() { : git man smga; \
 		[ $# -lt 1 ] && echo Usage: smga command && return; : Ensure proper number of arguments; \
-		$SHELL -c \"git $@\";                               : Execute in container; \
 		git smg \"$@\";                                     : Iterate; \
+		git smquiet || echo Entering \\'.\\';               : Output current path; \
+		eval git \"$@\";                                    : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	lssubmodulesbr = "!f() { \

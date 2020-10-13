@@ -5,7 +5,7 @@
 	# helper
 	empty = !echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904
 	root = !git rev-parse --show-toplevel
-	broot = !git rev-parse --show-toplevel | xargs basename
+	broot = !git rev-parse --show-toplevel | xargs -0 basename
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
@@ -28,7 +28,7 @@
 	bru = branch -u
 	brsc = branch --show-current
 	brcontains = branch --contains
-	brupstream = rev-parse --abbrev-ref @{u}
+	brupstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
 	# diff
 	di = diff
 	dis = diff --staged
@@ -117,7 +117,6 @@
 	# submodule
 	smquiet = !false
 	smflags = !git smquiet && echo --quiet
-	smcolor = !cat
 	sm = submodule
 	smupdate = !git sm update --init
 	smfor = !git sm foreach
