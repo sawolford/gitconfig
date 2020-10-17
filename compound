@@ -247,30 +247,42 @@
 	}; f"
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
+	smfone = "!f() { \
+		[ $# -lt 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
+		git sm $(git smflags) foreach \"$@\";              : Iterate; \
+	}; f"
 	smf = "!f() { : git man smf; \
-		[ $# -lt 1 ] && echo Usage: smf command && return;                  : Ensure proper number of arguments; \
-		if [ $# -eq 1 ]; then git sm $(git smflags) foreach \"$@ || true\"; : Iterate and ignore errors; \
-		else git sm $(git smflags) foreach \"$@\"; fi;                      : Iterate; \
-		return 0;                                                           : Return zero; \
+		[ $# -lt 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
+		: Iterate; \
+		[ $# -eq 1 ] && git smfone \"$1; true\"; \
+		[ $# -eq 2 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\"; true\"; \
+		[ $# -eq 3 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true\"; \
+		[ $# -eq 4 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true\"; \
+		[ $# -eq 5 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true\"; \
+		[ $# -eq 6 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true\"; \
+		[ $# -eq 7 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true\"; \
+		[ $# -eq 8 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true\"; \
+		[ $# -eq 9 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true\"; \
+		[ $# -gt 9 ] && git sm $(git smflags) foreach \"$@\"; \
+		return 0;                                          : Return zero; \
 	}; f"
 	smg = "!f() { : git man smg; \
 		[ $# -lt 1 ] && echo Usage: smg command && return; : Ensure proper number of arguments; \
-		if [ $# -eq 1 ]; then git smf \"git $@\";          : Iterate and ignore errors; \
-		else git smf \"git $@\"; fi;                       : Iterate; \
+		git smf git \"$@\";                                : Iterate; \
 		return 0;                                          : Return zero; \
 	}; f"
 	smfa = "!f() { : git man smfa; \
 		[ $# -lt 1 ] && echo Usage: smfa command && return; : Ensure proper number of arguments; \
 		git smf \"$@\";                                     : Iterate; \
 		git smquiet || echo Entering \\'.\\';               : Output current path; \
-		eval $@;                                            : Execute in container; \
+		\"$@\";                                             : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	smga = "!f() { : git man smga; \
 		[ $# -lt 1 ] && echo Usage: smga command && return; : Ensure proper number of arguments; \
 		git smg \"$@\";                                     : Iterate; \
 		git smquiet || echo Entering \\'.\\';               : Output current path; \
-		eval git \"$@\";                                    : Execute in container; \
+		git \"$@\";                                         : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	lssubmodulesbr = "!f() { \
@@ -313,7 +325,17 @@
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches ; \
 			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git smf \"case \\$name in $filter) $* ;; esac || true\";                : Iterate with filter and apply command; \
+			: Iterate with filter and apply command; \
+			[ $# -eq 1 ] && git smfone \"case \\$name in $filter) $1; true;; esac\"; \
+			[ $# -eq 2 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\"; true;; esac\"; \
+			[ $# -eq 3 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true;; esac\"; \
+			[ $# -eq 4 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true;; esac\"; \
+			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true;; esac\"; \
+			[ $# -eq 6 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true;; esac\"; \
+			[ $# -eq 7 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true;; esac\"; \
+			[ $# -eq 8 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true;; esac\"; \
+			[ $# -eq 9 ] && git smfone \"case \\$name in $filter) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true;; esac\"; \
+			[ $# -gt 9 ] && git smfone \"case \\$name in $filter) $*; true;; esac\"; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"
@@ -324,7 +346,17 @@
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches; \
 			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git smf \"case \\$name in $filter) git $* ;; esac || true\";            : Iterate with filter and apply command; \
+			: Iterate with filter and apply command; \
+			[ $# -eq 1 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\"; true;; esac\"; \
+			[ $# -eq 2 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\"; true;; esac\"; \
+			[ $# -eq 3 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true;; esac\"; \
+			[ $# -eq 4 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true;; esac\"; \
+			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\";; true; esac\"; \
+			[ $# -eq 6 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true;; esac\"; \
+			[ $# -eq 7 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true;; esac\"; \
+			[ $# -eq 8 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true;; esac\"; \
+			[ $# -eq 9 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true;; esac\"; \
+			[ $# -gt 9 ] && git smfone \"case \\$name in $filter) git $*; true;; esac\"; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"
@@ -335,7 +367,16 @@
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches ; \
 			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git smf \"case \\$name in $filter) ;; *) $* ;; esac || true\";          : Iterate with filter and apply command; \
+			[ $# -eq 1 ] && git smfone \"case \\$name in $filter) ;; *) $1; true;; esac\"; \
+			[ $# -eq 2 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\"; true;; esac\"; \
+			[ $# -eq 3 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true;; esac\"; \
+			[ $# -eq 4 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true;; esac\"; \
+			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true;; esac\"; \
+			[ $# -eq 6 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true;; esac\"; \
+			[ $# -eq 7 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true;; esac\"; \
+			[ $# -eq 8 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true;; esac\"; \
+			[ $# -eq 9 ] && git smfone \"case \\$name in $filter) ;; *) \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true;; esac\"; \
+			[ $# -gt 9 ] && git smfone \"case \\$name in $filter) ;; *) $*; true;; esac\"; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"
@@ -346,7 +387,16 @@
 		if echo $filter | grep ^$ >/dev/null 2>&1; then                             : If filter does not generate any matches; \
 			git smf true;                                                           : Iterate and apply noop; \
 		else                                                                        : Else filter matches at least one submodule; \
-			git smf \"case \\$name in $filter) ;; *) git $* ;; esac || true\";      : Iterate with filter and apply command; \
+			[ $# -eq 1 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\"; true;; esac\"; \
+			[ $# -eq 2 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\"; true;; esac\"; \
+			[ $# -eq 3 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true;; esac\"; \
+			[ $# -eq 4 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true;; esac\"; \
+			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true;; esac\"; \
+			[ $# -eq 6 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true;; esac\"; \
+			[ $# -eq 7 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true;; esac\"; \
+			[ $# -eq 8 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true;; esac\"; \
+			[ $# -eq 9 ] && git smfone \"case \\$name in $filter) ;; *) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true;; esac\"; \
+			[ $# -gt 9 ] && git smfone \"case \\$name in $filter) ;; *) git $*; true;; esac\"; \
 		fi; \
 		return 0;                                                                   : Return zero; \
 	}; f"

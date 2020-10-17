@@ -98,7 +98,7 @@
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin
-	pushdd = push --delete 
+	pushdd = push --delete
 	pushd = !git pushdd origin
 	rea = rebase --abort
 	rec = rebase --continue
