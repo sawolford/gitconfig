@@ -408,6 +408,28 @@
 		cd \"$path\";                                                     : Cd to submodule; \
 		git cob $branch;                                                  : Checkout the branch; \
 	}; f"
+	rmsubmodules = "!f() { \
+		[ $# -lt 1 ] && echo Usage: rmsubmodules submodule ... && return;            : Ensure proper number of arguments; \
+		IFS=\"\n\";                                                                  : Use newline as separator; \
+		for i in \"$@\"; do                                                          : Iterate over all arguments; \
+			for j in $(git lssubmodules); do                                         : Iterate over all submodules; \
+				if [ \"$i\" = \"$j\" ]; then                                         : If argument matches a submodule; \
+					git config --file=.gitmodules --remove-section submodule.\"$i\"; : Remove reference from .gitmodules; \
+				fi; \
+			done; \
+		done; \
+		git add .gitmodules;                                                         : Stage .gitmodules; \
+		for i in \"$@\"; do                                                          : Iterate over all arguments; \
+			for j in $(git lssubmodules); do                                         : Iterate over all submodules; \
+				if [ \"$i\" = \"$j\" ]; then                                         : If argument matches a submodule; \
+					git config --local --remove-section submodule.\"$i\";            : Remove reference from .git/config; \
+					git rm --cached \"$i\";                                          : Remove reference from working copy; \
+					rm -rf .git/modules/\"$i\";                                      : Remove submodule .git folder; \
+					rm -rf \"$i\";                                                   : Remove submodule; \
+				fi; \
+			done; \
+		done; \
+	}; f"
     # pullrebase
 	mergetooly = "!f() { \
 		cmd=\"mergetool -y\";                                            : Set next command; \
