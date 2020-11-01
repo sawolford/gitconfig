@@ -7,6 +7,7 @@
 	ingitwindows = "!f() { if (git ingitbash || git ingitcmd); then return 0; else return 1; fi; }; f"
 	haveman = !which man >/dev/null 2>&1
 	havepandoc = !which pandoc >/dev/null 2>&1
+	slashsuperroot = "!f() { if git ingitbash; then git superroot | sed \"s,\\(.\\):/,/\\L\\1/,\"; else git superroot; fi; }; f"
 	# color
 	ccyan = "!f() { git ingitwindows && echo \"[36m\" || printf \"\\033[96;1;1m\"; }; f"
 	cgray = "!f() { git ingitwindows && echo \"[37m\" || printf \"\\033[90;1;1m\"; }; f"
@@ -140,7 +141,11 @@
 		if [ $# -ne 2 ]; then echo Usage: forceeol match eol; return 1; fi; : Ensure proper number of arguments; \
 		grep \"$1 text eol=$2\" $LOCALFILE >/dev/null 2>&1 && return;       : Ensure that config has not already been set \
 		echo \"$1\" text eol=$2 | tee -a $LOCALFILE;                        : Write the attribute to the proper local file; \
-	}; f "
+	}; f"
+	resetperms = "!f() { \
+		git diff -p -R --no-ext-diff --no-color | grep -E \"^(old|new) mode\" >/dev/null 2>&1 || return 0;      : Return if no mode changes; \
+		git diff -p -R --no-ext-diff --no-color | grep -E \"^(diff|(old|new) mode)\" --color=never | git apply; : Apply reverse patch to fix permissions; \
+	}; f"
 	# config
 	globalhookspath = "!f() { : git man globalhookspath; \
 		LOCALFILE=~/gitconfig/local;                                                 : Filename to write to; \
@@ -745,33 +750,85 @@
 			rm -f uncommit.txt;      : Clean up workspace; \
 		fi;                          : Close if statement; \
 	}; f"
-	backup = "!f() { : git man backup;\
-		cd \"$(git root)\";           : Change directory to root; \
-		bn=$(basename $(pwd));        : Get name of folder for backup file name; \
-		ii=0;                         : Initialize loop variable; \
-		while true; do                : Loop until file does not exist; \
-			fn=$bn.$ii.tar;           : Test backup file name; \
-			[ ! -e ../$fn ] && break; : Test if backup file exists; \
-			ii=$((ii + 1));           : Increment loop variable; \
-		done;                         : Close while loop; \
-		tar cf ../$fn .;              : Tar entire folder; \
-		echo $fn;                     : Output new backup file name; \
-		return 0;                     : Return zero; \
+	# backup
+	backuphelp = "!f() { \
+		[ $# -ne 1 ] && echo Usage: backuphelp bname && return 1; : Ensure proper number of arguments; \
+		bname=$1;                                                 : Store argument in variable; \
+		ii=0;                                                     : Initialize loop variable; \
+		while true; do                                            : Loop until file does not exist; \
+			fn=$bname.$ii.tar;                                    : Test backup file name; \
+			[ ! -e $fn ] && break;                                : Test if backup file exists; \
+			ii=$((ii + 1));                                       : Increment loop variable; \
+		done;                                                     : Close while loop; \
+		echo $fn;                                                 : Echo new filename; \
+		return 0;                                                 : Return zero; \
+	}; f"
+	backup = "!f() { : git man backup; \
+		cd \"$(git root)\";                               : Change directory to root; \
+		if [ -f .git ]; then                              : If submodule; \
+			sroot=\"$(git slashsuperroot)\";              : Get super root with all slashes; \
+			rname=$(realpath . --relative-to=\"$sroot\"); : Get path relative to super root; \
+			ename=$(echo $rname | sed \"s,/,%2F,g\");     : Get name with encoded slashes; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			fn=$(git backuphelp $ename);                  : Get a new tar file name; \
+			tar cf $fn $rname .git/modules/$rname;        : Tar submodule folder and its git folder; \
+		else                                              : Else regular; \
+			sroot=\"$(realpath ..)\";                     : Get containing folder as super root; \
+			bname=$(basename $(pwd));                     : Get name of folder for backup file name; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			fn=$(git backuphelp $bname);                  : Get a new tar file name; \
+			tar cf $fn $bname;                            : Tar folder including its git folder; \
+		fi; \
+		echo $sroot/$fn;                                  : Output new backup file name; \
+		return 0;                                         : Return zero; \
+	}; f"
+	unbackup = "!f() { \
+		[ $# -ne 1 ] && echo Usage: unbackup tarfile && return 1; : Ensure proper number of arguments; \
+		tfile=\"$1\";                                             : Store argument in variable; \
+		ename=\"${tfile%.*.tar}\";                                : Get name with encoded slashes; \
+		bname=$(echo $ename | sed \"s,%2F,/,g\");                 : Get name with unencoded slashes; \
+		if tar tf $tfile .git/modules >/dev/null 2>&1; then       : If tar file corresponds to submodule; \
+			echo rm -rf $bname .git/modules/$bname;               : Remove submodule and its git folder; \
+		else                                                      : Else tar file corresponds to regular; \
+			echo rm -rf $bname;                                   : Remove submodule containing its git folder; \
+		fi; \
+		echo tar xvf $tfile;                                      : Extract tar file; \
 	}; f"
 	backups = "!f() { : git man backups; \
-		cd \"$(git root)\";                          : Change directory to root; \
-		bn=$(basename $(pwd));                       : Get name of folder for backup file names; \
-		cd ..;                                       : Change directory up one folder; \
-		if ls -ldhtr $bn.*.tar >/dev/null 2>&1; then : If a backup file exists; \
-			ls -ldhtr $bn.*.tar;                     : Output backup file names; \
-		else                                         : Else backup file does not exist; \
-			echo No backups;                         : Output no backups; \
-		fi;                                          : Close if statement; \
-		return 0;                                    : Return zero; \
+		if [ -f .git ]; then                              : If submodule; \
+			sroot=\"$(git slashsuperroot)\";              : Get super root with all slashes; \
+			rname=$(realpath . --relative-to=\"$sroot\"); : Get path relative to super root; \
+			ename=$(echo $rname | sed \"s,/,%2F,g\");     : Get name with encoded slashes; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			if ls $ename.*.tar >/dev/null 2>&1; then      : If a tar file exists; \
+				ls -ldhtr $ename.*.tar;                   : List those tar files; \
+			else                                          : Else no tar file exists; \
+				echo No backups;                          : Echo informational message; \
+			fi; \
+		else                                              : Else regular; \
+			sroot=\"$(realpath ..)\";                     : Get containing folder as super root; \
+			bname=$(basename $(pwd));                     : Get name of folder for backup file name; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			if ls $bname.*.tar >/dev/null 2>&1; then      : If a tar file exists; \
+				ls -ldhtr $bname.*.tar;                   : List those tar files; \
+			else                                          : Else no tar file exists; \
+				echo No backups;                          : Echo informational message; \
+			fi; \
+		fi; \
+		return 0;                                         : Return zero; \
 	}; f"
 	backuprm = "!f() { : git man backuprm; \
-		cd \"$(git root)\";    : Change directory to root; \
-		bn=$(basename $(pwd)); : Get name of folder for backup file names; \
-		rm -f ../$bn.*.tar;    : Remove all backup files; \
-		return 0;              : Return zero; \
+		if [ -f .git ]; then                              : If submodule; \
+			sroot=\"$(git slashsuperroot)\";              : Get super root with all slashes; \
+			rname=$(realpath . --relative-to=\"$sroot\"); : Get path relative to super root; \
+			ename=$(echo $rname | sed \"s,/,%2F,g\");     : Get name with encoded slashes; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			rm -f $ename.*.tar;                           : Remove all associated tar files; \
+		else                                              : Else regular; \
+			sroot=\"$(realpath ..)\";                     : Get containing folder as super root; \
+			bname=$(basename $(pwd));                     : Get name of folder for backup file name; \
+			cd \"$sroot\";                                : Change directory to super root; \
+			rm -f $bname.*.tar;                           : Remove all associated tar files; \
+		fi; \
+		return 0;                                         : Return zero; \
 	}; f"

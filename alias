@@ -9,9 +9,10 @@
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
+	sh = "!f() { \"$@\"; }; f"
 	# alias
 	al = !git config --list | grep alias
-	alg = !git al | grep
+	alg = "!f() { git al | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
 	# attributes
 	lsca = !git ls-files | git check-attr --stdin
 	lscaunspecified = "!f() { git lsca ${1:-text} | grep unspecified; }; f"
@@ -82,7 +83,7 @@
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
 	cl = config --list --show-origin
-	clg = !git cl | grep
+	clg = "!f() { git cl | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
 	schemes = !git showconfig | grep ^url
 	manifest = ls-tree -r --name-only --full-tree HEAD
 	# merge
