@@ -788,11 +788,11 @@
 		ename=\"${tfile%.*.tar}\";                                : Get name with encoded slashes; \
 		bname=$(echo $ename | sed \"s,%2F,/,g\");                 : Get name with unencoded slashes; \
 		if tar tf $tfile .git/modules >/dev/null 2>&1; then       : If tar file corresponds to submodule; \
-			echo rm -rf $bname .git/modules/$bname;               : Remove submodule and its git folder; \
+			rm -rf $bname .git/modules/$bname;               : Remove submodule and its git folder; \
 		else                                                      : Else tar file corresponds to regular; \
-			echo rm -rf $bname;                                   : Remove submodule containing its git folder; \
+			rm -rf $bname;                                   : Remove submodule containing its git folder; \
 		fi; \
-		echo tar xvf $tfile;                                      : Extract tar file; \
+		tar xvf $tfile;                                      : Extract tar file; \
 	}; f"
 	backups = "!f() { : git man backups; \
 		if [ -f .git ]; then                              : If submodule; \
