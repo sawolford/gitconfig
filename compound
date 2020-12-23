@@ -42,7 +42,6 @@
 		git bundle create \"${2:-$(git broot).bundle}\" --since=\"$1\" --all;            : Call git bundle with proper arguments; \
 		return 0;                                                                        : Return zero; \
 	}; f"
-#		for remote in $(git branch -r | grep -vE \"HEAD|master\"); do \
 	fetchbundle = "!f() { \
 		[ $# -gt 1 ] && echo Usage: fetchbundle filename && return 1; : Ensure proper number of arguments; \
 		git fetch -u \"${1:-$(git broot).bundle}\" \"refs/*:refs/*\"; : Fetch from bundle and keep refs; \
@@ -727,6 +726,19 @@
 		return 0;                                                            : Return zero; \
 	}; f"
 	# misc
+	cp = "!f() { \
+		[ $# -ne 2 ] && echo Usage: cp source target && return 1;   : Ensure proper number of arguments; \
+		source=\"$1\";                                              : Store argument in variable; \
+		target=\"$2\";                                              : Store argument in variable; \
+		git checkout -b _dup;                                       : Checkout temporary branch; \
+		git mv $source $target;                                     : Move source to target in branch; \
+		git commit -m \"move $source to $target\";                  : Commit that move; \
+		git checkout HEAD~ $source;                                 : Restore the source prior to move; \
+		git commit -m \"restore $source\";                          : Commit that restore; \
+		git checkout -;                                             : Return to previous hash; \
+		git merge --no-ff _dup -m \"duplicate $source to $target\"; : Merge the temporary branch with move back in; \
+		git branch -D _dup;                                         : Delete temporary branch; \
+	}; f"
 	uncommit = "!f() { : git man uncommit; \
 		if ! git stowcheck; then return 1; fi;                                              : Call stowcheck alias to see if workspace is ready; \
 		arg=${1:-1};                                                                        : Get argument to uncommit, default to 1; \
