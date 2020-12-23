@@ -11,14 +11,15 @@
 	name = !git name-rev --name-only
 	sh = "!f() { \"$@\"; }; f"
 	# alias
-	al = !git config --list | grep alias
-	alg = "!f() { git al | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
+	al = "!f() { git config --list | grep alias | sed \"s,;.*,,\"; }; f"
+	alg = "!f() { git al | grep ${1:-.}; }; f"
 	# attributes
 	lsca = !git ls-files | git check-attr --stdin
 	lscaunspecified = "!f() { git lsca ${1:-text} | grep unspecified; }; f"
 	reco = !git rm -r . && git reset --hard
 	notasciilist = !git mimetype -v us-ascii | sed 's,:.*,,'
 	# branch
+	mergemaster = !git checkout master && git merge HEAD@{1}
 	resetmaster = branch --set-upstream-to=origin/master master
 	blog = log --left-right
 	br = branch
@@ -118,6 +119,7 @@
 	# submodule
 	smquiet = !false
 	smflags = !git smquiet && echo --quiet
+	clonesub = clone --recurse-submodules --remote-submodules
 	sm = submodule
 	smupdate = !git sm update --init
 	smfor = !git sm foreach
