@@ -26,6 +26,7 @@
 	prextra = "!f() { echo $(git extra [git $*]); }; f"
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
+	prnl = "!f() { printf \"%s\\12\" \"$@\"; }; f"
 	# bundle
 	verifybundle = "!f() { \
 		[ $# -gt 1 ] && echo Usage: verifybundle filename && return 1; : Ensure proper number of arguments; \
@@ -252,8 +253,8 @@
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
 	smfone = "!f() { \
-		[ $# -lt 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
-		git sm $(git smflags) foreach \"$@\";              : Iterate; \
+		[ $# -ne 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
+		git sm $(git smflags) foreach \"$1\";              : Iterate; \
 	}; f"
 	smf = "!f() { : git man smf; \
 		[ $# -lt 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
@@ -405,12 +406,20 @@
 		return 0;                                                                   : Return zero; \
 	}; f"
 	cobsubmodules = "!f() { \
-		[ $# -lt 2 ] && echo Usage: cobsubmodules path branch && return;  : Ensure proper number of arguments; \
-		path=\"$1\";                                                      : Set the file system path; \
-		branch=$2;                                                        : Set the branch; \
-		git config --file=.gitmodules \"submodule.$path.branch\" $branch; : Configure the .gitmodules file; \
-		cd \"$path\";                                                     : Cd to submodule; \
-		git cob $branch;                                                  : Checkout the branch; \
+		[ $# -lt 1 ] && echo Usage: cobsubmodule branch [path ...] && return;      : Ensure proper number of arguments; \
+		branch=$1;                                                                 : Set the branch; \
+		shift;                                                                     : Remove branch from arguments; \
+		for i in $(git lssubmodules); do                                           : Loop over all submodules; \
+			for j in \"$@\"; do                                                    : Loop over arguments; \
+				if [ $i = $j ]; then                                               : Check path; \
+					git config --file=.gitmodules \"submodule.$j.branch\" $branch; : Configure the .gitmodules file; \
+					pushd \"$j\" >/dev/null;                                       : Change to submodule folder; \
+					if git hasbranch $branch; then git co $branch;                 : Checkout the branch; \
+					else git cob $branch; fi;                                      : Create and checkout the branch; \
+					popd;                                                          : Change back folder; \
+				fi; \
+			done; \
+		done; \
 	}; f"
 	rmsubmodules = "!f() { \
 		[ $# -lt 1 ] && echo Usage: rmsubmodules submodule ... && return;            : Ensure proper number of arguments; \
@@ -724,6 +733,44 @@
 		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd); : Output next command; \
 		git $cmd;                                                            : Call branchpullrebase on master; \
 		return 0;                                                            : Return zero; \
+	}; f"
+	# shallow
+	goshallow = "!f() { \
+		git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/master';   : Map only master branch; \
+		BRANCH=$(git rev-parse --abbrev-ref HEAD);                                        : Get current branch name; \
+		IFS=\"\n\";                                                                       : Use newlines as delimiter; \
+		for i in $(git branch -r --format=\"%(refname)\" | sed \"s,refs/remotes/,,\"); do : Loop over remote branch names; \
+			[ $i != \"origin/$BRANCH\" ] && git branch -rd $i;                            : Delete other remote branch; \
+		done; \
+		git fetchd 1;                                                                     : Fetch most recent commit; \
+		git rbranch;                                                                      : Reset to that upstream branch; \
+		git cleanup;                                                                      : Expire unreferenced commits; \
+		git gcprune;                                                                      : Garbage collect; \
+	}; f"
+	pullshallow = "!f() { \
+		if ! git grafted; then  : If not a shallow clone; \
+			echo regular clone; : Print error message; \
+			return 1;           : Return one; \
+		fi; \
+		git goshallow;          : Switch to shallow clone; \
+	}; f"
+	godeep = "!f() { \
+		if git grafted; then                                                      : If a shallow clone\
+			git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'; : Map all branches; \
+			git fetch --unshallow;                                                : Fetch all commits; \
+			git co $(git name HEAD | sed 's,remotes/origin/,,');                  : Checkout same branch; \
+		fi; \
+	}; f "
+	pulldeep = "!f() { \
+		if git grafted; then    : If a shallow clone; \
+			echo shallow clone; : Print error message; \
+			return 1;           : Return one; \
+		fi; \
+		git pull;               : Execute pull; \
+	}; f"
+	pullboth = "!f() { \
+		if git grafted; then git pullshallow; : Pull shallow on shallow clone; \
+		else git pulldeep; fi                 : Pull deep on deep clone;  \
 	}; f"
 	# misc
 	cp = "!f() { \

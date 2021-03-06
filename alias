@@ -5,7 +5,7 @@
 	# helper
 	empty = !echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904
 	root = !git rev-parse --show-toplevel
-	broot = !git rev-parse --show-toplevel | xargs -0 basename
+	broot = !git rev-parse --show-toplevel | xargs -0 basename | head -1
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
@@ -31,6 +31,7 @@
 	brsc = branch --show-current
 	brcontains = branch --contains
 	brupstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
+	hasbranch = show-ref --quiet refs/heads
 	# diff
 	di = diff
 	dis = diff --staged
@@ -56,7 +57,6 @@
 	dtmr = "!f() { git dtm -d ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
 	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
-	subdiff = diff --submodule=diff
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
@@ -81,6 +81,11 @@
 	outgoing = !git fetch && git log --left-right @{u}..
 	paths = remote -v
 	st = status --short
+	stno = !git st -uno
+	stall = !git st -uall
+	stc = "!f() { git st \"$@\" | cut -c 4-; }; f"
+	stnoc = "!f() { git stno \"$@\" | cut -c 4-; }; f"
+	stallc = "!f() { git stall \"$@\" | cut -c 4-; }; f"
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
 	cl = config --list --show-origin
@@ -94,9 +99,11 @@
 	# misc
 	addp = add --patch
 	addu = add -u .
+	addN = add -N
 	rsho = remote set-head origin
 	recommit = !git commit --allow-empty-message -t uncommit.txt
 	recommita = !git commit --allow-empty-message -t uncommit.txt -a
+	grepall = "!f() {  git grep $1 $(git rev-list --all -- ${2:-.}) -- ${2:-.}; }; f"
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin
@@ -113,6 +120,12 @@
 	forcestrip = "!f() { git reset --hard $1^; }; f"
 	dangling = fsck --no-reflogs
 	cleanup = reflog expire --expire=now --all
+	# shallow
+	cloneshallow = clone --depth 1
+	grafted = "!f() { git log --oneline --format=%D | grep -q ^grafted; }; f"
+	fetchd = "!f() { git fetch --depth ${1:-1}; }; f"
+	rbranch = reset --hard @{u}
+	gcprune = gc --prune=now
 	# stash
 	stlist = stash list
 	stshow = stash show
@@ -121,12 +134,21 @@
 	smflags = !git smquiet && echo --quiet
 	clonesub = clone --recurse-submodules --remote-submodules
 	sm = submodule
+	sminit = !git smg init
 	smupdate = !git sm update --init
+	smshallow = !git smupdate --depth 1
+	smdeinit = !git sm deinit
+	smdeinitall = !git smdeinit --all
 	smfor = !git sm foreach
 	sma = !git sm add
 	sms = !git sm summary
-	disub = !git di --submodule
+	disub = diff --submodule
+	subdiff = diff --submodule=diff
+	nl2nul = !tr \"\\n\" \"\\0\"
 	lssubmodules = !git ls-files --stage | grep 160000 | cut -c 51-
+	lssubmodules0 = !git lssubmodules | git nl2nul
+	addsubmodules = !git lssubmodules0 | xargs -0 git add
+	unaddsubmodules = !git lssubmodules0 | xargs -0 git reset --
 	catsubmodules = config -f .gitmodules -l
 	# pullrebase
 	rebcont = rebase --continue
