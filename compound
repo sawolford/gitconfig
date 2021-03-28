@@ -71,7 +71,7 @@
 		return 0;                                                                            : Return zero; \
 	}; f"
 	uncombinebundles = "!f() { \
-		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: uncombinebundles tarfile rootname && return 1; : Ensure proper number of arguments;\
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: uncombinebundles tarfile rootname && return 1; : Ensure proper number of arguments; \
 		tarfile=\"$1\";                                                                        : Set the input filename; \
 		bname=\"${2:-$(git broot).bundle}\";                                                   : Set the toplevel name; \
 		tar xvf \"$tarfile\" \"$bname\";                                                       : Extract the toplevel bundle; \
@@ -406,7 +406,7 @@
 		return 0;                                                                   : Return zero; \
 	}; f"
 	cobsubmodules = "!f() { \
-		[ $# -lt 1 ] && echo Usage: cobsubmodule branch [path ...] && return;      : Ensure proper number of arguments; \
+		[ $# -lt 1 ] && echo Usage: cobsubmodules branch [path ...] && return;     : Ensure proper number of arguments; \
 		branch=$1;                                                                 : Set the branch; \
 		shift;                                                                     : Remove branch from arguments; \
 		for i in $(git lssubmodules); do                                           : Loop over all submodules; \
@@ -444,6 +444,28 @@
 		done; \
 	}; f"
     # pullrebase
+	glto = "!f() { \
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: glto branch [branch] && return 1; : Ensure proper number of arguments; \
+		to=$1;                                                                    : Get target branch; \
+		from=${2:-$(git rev-parse --abbrev-ref HEAD)};                            : Get source branch; \
+		git merge-base $to $from >/dev/null 2>&1 || return 2;                     : Ensure branches are related; \
+		BASE=$(git merge-base $to $from);                                         : Get base of branches; \
+		if [ $BASE != $(git rev-parse $to) ]; then                                : If something to rebase; \
+			git gl $BASE..$from;                                                  : Output changesets that would be rebased; \
+		fi; \
+		return 0;                                                                 : Return zero; \
+	}; f"
+	glfrom = "!f() { \
+		[ $# -lt 1 -o $# -gt 2 ] && echo Usage: glfrom branch [branch] && return 1; : Ensure proper number of arguments; \
+		from=$1;                                                                    : Get source branch; \
+		to=${2:-$(git rev-parse --abbrev-ref HEAD)};                                : Get target branch; \
+		git merge-base $from $to >/dev/null 2>&1 || return 2;                       : Ensure branches are related; \
+		BASE=$(git merge-base $from $to);                                           : Get base of branches; \
+		if [ $BASE != $(git rev-parse $to) ]; then                                  : If something to rebase; \
+			git gl $BASE..$from;                                                    : Output changesets that would be rebased; \
+		fi; \
+		return 0;                                                                   : Return zero; \
+	}; f"
 	mergetooly = "!f() { \
 		cmd=\"mergetool -y\";                                            : Set next command; \
 		echo $(git prheader) $(git emph mergetooly) $(git prextra $cmd); : Output next command; \
@@ -737,7 +759,7 @@
 	# shallow
 	goshallow = "!f() { \
 		git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/master';   : Map only master branch; \
-		BRANCH=$(git rev-parse --abbrev-ref HEAD);                                        : Get current branch name; \
+		BRANCH=$(git name HEAD);                                                          : Get current branch name; \
 		IFS=\"\n\";                                                                       : Use newlines as delimiter; \
 		for i in $(git branch -r --format=\"%(refname)\" | sed \"s,refs/remotes/,,\"); do : Loop over remote branch names; \
 			[ $i != \"origin/$BRANCH\" ] && git branch -rd $i;                            : Delete other remote branch; \
@@ -755,10 +777,12 @@
 		git goshallow;          : Switch to shallow clone; \
 	}; f"
 	godeep = "!f() { \
-		if git grafted; then                                                      : If a shallow clone\
+		if git grafted; then                                                      : If a shallow clone; \
 			git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'; : Map all branches; \
 			git fetch --unshallow;                                                : Fetch all commits; \
-			git co $(git name HEAD | sed 's,remotes/origin/,,');                  : Checkout same branch; \
+			BRANCH=$(git name HEAD | sed 's,remotes/origin/,,');                  : Save current branch; \
+			git co \"$BRANCH\";                                                   : Checkout same branch; \
+			git remote set-head origin master;                                    : Set origin/HEAD to master; \
 		fi; \
 	}; f "
 	pulldeep = "!f() { \
