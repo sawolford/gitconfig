@@ -3,12 +3,12 @@
 [alias]
     gitconfigplat = !echo wsl
 [difftool "kdiff3"]
-	cmd = kdiff3.exe \"`wslpath -w $LOCAL`\" \"`wslpath -w $REMOTE`\"
+	cmd = kdiff3.exe \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\"
 [difftool "meld"]
-	cmd = meld.exe -L \"`wslpath -w $LOCAL`\" -L \"` wslpath -w $REMOTE`\"
+	cmd = meld.exe \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\"
 [mergetool "kdiff3"]
-	cmd = kdiff3.exe -m \"`wslpath -w $BASE`\" \"`wslpath -w $LOCAL`\" \"`wslpath -w $REMOTE`\" -o \"`wslpath -w $MERGED`\"
+	cmd = kdiff3.exe -m \"`wslpath -m $BASE`\" \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\" -o \"`wslpath -m $MERGED`\"
 	trustExitCode = false
 [mergetool "meld"]
-	cmd = meld.exe -m \"`wslpath -w $BASE`\" \"`wslpath -w $LOCAL`\" \"`wslpath -w $REMOTE`\" -o \"`wslpath -w $MERGED`\"
+	cmd = meld.exe \"`wslpath -m $BASE`\" \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\" -o \"`wslpath -m $MERGED`\"
 	trustExitCode = false
