@@ -7,6 +7,7 @@
 	root = !git rev-parse --show-toplevel
 	broot = !git rev-parse --show-toplevel | xargs -0 basename | head -1
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
+	firsthash = !git rev-list --abbrev-commit HEAD | tail -n 1
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
 	sh = "!f() { \"$@\"; }; f"
@@ -60,6 +61,7 @@
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
+	gm = log --reverse --abbrev-commit --pretty=minimal
 	gla = !git gl --all --reflog
 	glv = log --name-status
 	glva = !git glv --all --reflog
@@ -104,6 +106,7 @@
 	recommit = !git commit --allow-empty-message -t uncommit.txt
 	recommita = !git commit --allow-empty-message -t uncommit.txt -a
 	grepall = "!f() {  git grep $1 $(git rev-list --all -- ${2:-.}) -- ${2:-.}; }; f"
+	cofirst = !git checkout $(git firsthash)
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin

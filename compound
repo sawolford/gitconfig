@@ -253,7 +253,7 @@
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
     # submodules
 	smfone = "!f() { \
-		[ $# -ne 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
+		[ $# -ne 1 ] && echo Usage: smfone command && return; : Ensure proper number of arguments; \
 		git sm $(git smflags) foreach \"$1\";              : Iterate; \
 	}; f"
 	smf = "!f() { : git man smf; \
@@ -796,6 +796,48 @@
 		if git grafted; then git pullshallow; : Pull shallow on shallow clone; \
 		else git pulldeep; fi                 : Pull deep on deep clone;  \
 	}; f"
+	# versioning
+	gmprefix = "!f() { \
+		broot=$(git broot);                : Get toplevel folder name; \
+		git gm | nl -s \":      $broot:\"; : Output log with toplevel folder name in prefix; \
+		printf \"\n\";                     : Output final newline; \
+	}; f"
+	gmglobal = "!f() { \
+		root=$(git broot);                                 : Get toplevel folder name; \
+		cat "$@" - | sed \"s,$root:,.:,\" | sort -n -t : -k 4 | nl -s:; : Replace toplevel folder name and sort chronologically; \
+	}; f"
+	gmmaximum = "!f() { \
+		file=$(mktemp);                                        : Get temporary file; \
+		cat > $file;                                           : Write to temporary file; \
+		nfile=$(cat $file | wc -l);                            : Find the maximum global version number; \
+		number=${1:-$nfile};                                   : Use argument passed in or maximum global version number; \
+		IFS=\"\n\";                                            : Use newline as separator; \
+		(for i in $(git lssubmodules; echo .); do              : Iterate over all submodules; \
+			head -n $number $file | grep -F \"$i\": | tail -1; : Find the highest global version number for a submodule; \
+		done) | sort -n -t : -k 1;                             : Sort by global version number; \
+		rm -f $file;                                           : Cleanup temporary file; \
+	}; f"
+	gmcheckout = "!f() { \
+		file=$(mktemp);                                              : Get temporary file; \
+		cat > $file;                                                 : Write to temporary file; \
+		if cat $file | grep -F .: >/dev/null; then                   : If hash exists in input stream; \
+			hash=$(cat $file | grep -F .: | cut -d : -f 4);          : Get the hash; \
+			git co $hash;                                            : And check it out; \
+		else \
+			git cofirst;                                             : Otherwise, check out the first hash; \
+		fi; \
+		git smupdate;                                                : Update all submodules for the current changeset; \
+		IFS=\"\n\";                                                  : Use newline as separator; \
+		for i in $(git lssubmodules); do                             : Iterate over all submodules; \
+			if cat $file | grep -F \"$i\": >/dev/null; then          : If hash exists in input stream; \
+				hash=$(cat $file | grep -F \"$i\": | cut -d : -f 4); : Get the hash; \
+				(cd $i && git checkout $hash);                       : And check it out; \
+			else \
+				(cd $i && git cofirst);                              : Otherwise, check out the first hash; \
+			fi; \
+		done; \
+		rm -f $file;                                                 : Cleanup temporary file; \
+	}; f"
 	# misc
 	cp = "!f() { \
 		[ $# -ne 2 ] && echo Usage: cp source target && return 1;   : Ensure proper number of arguments; \
@@ -832,6 +874,46 @@
 			git recommita;           : Then recommit; \
 			rm -f uncommit.txt;      : Clean up workspace; \
 		fi;                          : Close if statement; \
+	}; f"
+	forcepushbranch = "!f() { \
+		[ $# -ne 1 ] && echo Usage: forcepushbranch branch && return 1; : Ensure proper number of arguments; \
+		branch=$1;                                                      : Get branch name; \
+		if ! git stow; then return 1; fi;                               : Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout -b _temp $branch\";                              : Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);                  : Output next command; \
+		git $cmd;                                                       : Commit merged changeset; \
+		cmd=\"push --delete origin $branch\";                           : Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);                  : Output next command; \
+		git $cmd;                                                       : Commit merged changeset; \
+		cmd=\"branch -d $branch\";                                      : Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);                  : Output next command; \
+		git $cmd;                                                       : Commit merged changeset; \
+		cmd=\"branch -m _temp $branch\";                                : Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);                  : Output next command; \
+		git $cmd;                                                       : Commit merged changeset; \
+		cmd=\"push --set-upstream origin $branch\";                     : Set next command; \
+		echo $(git prinfo) commit $(git prextra $cmd);                  : Output next command; \
+		git $cmd;                                                       : Commit merged changeset; \
+		git unstow;                                                     : Call unstow alias to restore Workspace to former condition; \
+	}; f"
+	clone2bare = "!f() { \
+		name=$(git broot); \
+		git clean -fd; \
+		git ls-files -z | xargs -0 rm -f; \
+		if [ -d .git ]; then gitfolder=.git; \
+		else gitfolder=$(cat .git | sed \"s,gitdir: ,,\"); fi; \
+		mv $gitfolder/* .; \
+		if [ -d .git ]; then rmdir .git; \
+		else rm -f .git; fi; \
+		configfile=config; \
+		echo \"[core]\" >$configfile; \
+		echo \"\trepositoryformatversion = 0\" >>$configfile; \
+		echo \"\tfilemode = true\" >>$configfile; \
+		echo \"\tbare = true\" >>$configfile; \
+		echo \"\tsharedrepository = 1\" >>$configfile; \
+		echo \"[receive]\" >>$configfile; \
+		echo \"\tdenyNonFastforwards = true\" >>$configfile; \
+		mv ../$name ../$name.git; \
 	}; f"
 	# backup
 	backuphelp = "!f() { \
