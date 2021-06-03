@@ -808,7 +808,7 @@
 	}; f"
 	gmmaximum = "!f() { \
 		file=$(mktemp);                                        : Get temporary file; \
-		cat > $file;                                           : Write to temporary file; \
+		grep -Ev \"^[[:space:]]*$\" > $file;                   : Write to temporary file; \
 		nfile=$(cat $file | wc -l);                            : Find the maximum global version number; \
 		number=${1:-$nfile};                                   : Use argument passed in or maximum global version number; \
 		IFS=\"\n\";                                            : Use newline as separator; \
@@ -838,6 +838,53 @@
 		done; \
 		rm -f $file;                                                 : Cleanup temporary file; \
 	}; f"
+	# clang
+	cpfilesfrom = "!f() { \
+        fromdir=$1; \
+        shift; \
+        for i in \"$@\"; do \
+            outfile=${i/=*/}; \
+            if echo $i | grep = >/dev/null 2>&1; then infile=${i/*=/}; \
+            else infile=$i; fi; \
+            find $fromdir -name $infile -print0 | xargs -0 md5sum $infiles | cut -c -32 | sort | uniq | wc -l | grep -q \"^ *1$\" || { \
+                echo git cpfilesfrom: no/ambiguous input file: $infile \"=>\" $(find $fromdir -name $infile); \
+                continue; \
+            }; \
+            finfile=$(find $fromdir -name $infile -print -quit); \
+            if [ -e $outfile ]; then \
+                echo git cpfilesfrom: output file already exists: $outfile; \
+                continue; \
+            fi; \
+            echo $finfile \"=>\" $outfile; \
+            cp $finfile $outfile; \
+        done; \
+	}; f"
+    genclangconfig = !cd $(git root) && git cpfilesfrom $(git superroot) .clang-format=dot-clang-format .clang-tidy=dot-clang-tidy
+    clangformat = "!f() { \
+        pattern=; \
+        : .m and .mm excluded below; \
+        for i in c cc cp cpp c++ cxx hh hpp hxx cu cuh proto protodevel java js ts cs; do \
+            pattern=\"$pattern -e \\.$i$\"; \
+        done; \
+        files=$(${1:-git diff --name-only --cached} | grep $pattern); \
+        IFS=\"\n\";                                                                       : Use newlines as delimiter; \
+        for i in $files; do\
+            clang-format -i $i; \
+        done; \
+    }; f"
+    clangtidy = "!f() { \
+        [ $# -lt 1 ] && echo Usage: clangtidy path && return 1; : Ensure proper number of arguments; \
+        path=$1; \
+        pattern=; \
+        for i in c cc cp cpp c++ cxx; do \
+            pattern=\"$pattern -e \\.$i$\"; \
+        done; \
+        files=$(${2:-git diff --name-only --cached} | grep $pattern); \
+        IFS=\"\n\";                                             : Use newlines as delimiter; \
+        for i in $files; do\
+            clang-tidy -p $path -fix $i; \
+        done; \
+    }; f"
 	# misc
 	cp = "!f() { \
 		[ $# -ne 2 ] && echo Usage: cp source target && return 1;   : Ensure proper number of arguments; \

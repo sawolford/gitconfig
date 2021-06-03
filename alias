@@ -90,6 +90,7 @@
 	stallc = "!f() { git stall \"$@\" | cut -c 4-; }; f"
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
+	purgeall = !git clean -fd $(git root)
 	cl = config --list --show-origin
 	clg = "!f() { git cl | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
 	schemes = !git showconfig | grep ^url

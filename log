@@ -11,4 +11,4 @@
     stash = yellow
 [pretty]
     pretty = format:%C(auto)%h%Creset %C(bold blue)%<(16)%an%C(reset) %C(bold magenta)%<(16)%cr%C(reset) %C(auto)%d%C(reset) %s
-    minimal = format:%h:%at:%as
+    minimal = format:%h:%at:%aD
