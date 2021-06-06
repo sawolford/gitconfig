@@ -797,14 +797,23 @@
 		else git pulldeep; fi                 : Pull deep on deep clone;  \
 	}; f"
 	# versioning
+	gmversion = "!f() { \
+		if [ $# -gt 0 ]; then max=$1; shift; fi;                                                       : Get maximum revision if provided; \
+		[ $max=. ] && unset max;                                                                       : If first argument is ., assume maximum version; \
+		if [ -d $(git root)/.git/modules ]; then                                                       : If a superproject; \
+			git -c 'alias.smquiet=!true' smga gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-}; : Execute recursive gm* query commands; \
+		else                                                                                           : Else regular ; \
+			git gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-};                               : Execute regular gm* query commands; \
+		fi; \
+	}; f"
 	gmprefix = "!f() { \
 		broot=$(git broot);                : Get toplevel folder name; \
 		git gm | nl -s \":      $broot:\"; : Output log with toplevel folder name in prefix; \
 		printf \"\n\";                     : Output final newline; \
 	}; f"
 	gmglobal = "!f() { \
-		root=$(git broot);                                 : Get toplevel folder name; \
-		cat "$@" - | sed \"s,$root:,.:,\" | sort -n -t : -k 4 | nl -s:; : Replace toplevel folder name and sort chronologically; \
+		root=$(git broot);                                                : Get toplevel folder name; \
+		cat \"$@\" - | sed \"s,$root:,.:,\" | sort -n -t : -k 4 | nl -s:; : Replace toplevel folder name and sort chronologically; \
 	}; f"
 	gmmaximum = "!f() { \
 		file=$(mktemp);                                        : Get temporary file; \
@@ -840,49 +849,50 @@
 	}; f"
 	# clang
 	cpfilesfrom = "!f() { \
-        fromdir=$1; \
-        shift; \
-        for i in \"$@\"; do \
-            outfile=${i/=*/}; \
-            if echo $i | grep = >/dev/null 2>&1; then infile=${i/*=/}; \
-            else infile=$i; fi; \
-            find $fromdir -name $infile -print0 | xargs -0 md5sum $infiles | cut -c -32 | sort | uniq | wc -l | grep -q \"^ *1$\" || { \
-                echo git cpfilesfrom: no/ambiguous input file: $infile \"=>\" $(find $fromdir -name $infile); \
-                continue; \
-            }; \
-            finfile=$(find $fromdir -name $infile -print -quit); \
-            if [ -e $outfile ]; then \
-                echo git cpfilesfrom: output file already exists: $outfile; \
-                continue; \
+        [ $# -lt 2 ] && echo Usage: cpfilesfrom folder outfile=infile [outfile=infile ...];                   : Ensure proper number of arguments; \
+        fromdir=$1; shift;                                                                                    : Set directory to copy from; \
+        for i in \"$@\"; do                                                                                   : Loop over remaining arguments; \
+            outfile=${i/=*/};                                                                                 : Output file name is left of = sign; \
+            if [ -e $outfile ]; then                                                                          : If output file already exists; \
+                echo git cpfilesfrom: output file already exists: $outfile;                                   : Output error message; \
+                continue;                                                                                     : Get next input file; \
             fi; \
-            echo $finfile \"=>\" $outfile; \
-            cp $finfile $outfile; \
+            if echo $i | grep = >/dev/null 2>&1; then infile=${i/*=/};                                        : Get input file name if there is one; \
+            else infile=$i; fi;                                                                               : Else use output file name as input file name; \
+			: Make sure all found files have matching content; \
+            find $fromdir -name $infile -print0 | xargs -0 md5sum $infiles | cut -c -32 | sort | uniq | wc -l | grep -q \"^ *1$\" || { \
+                echo git cpfilesfrom: no/ambiguous input file: $infile \"=>\" $(find $fromdir -name $infile); : Output error message; \
+                continue;                                                                                     : Go to next iteration; \
+            }; \
+            finfile=$(find $fromdir -name $infile -print -quit);                                              : Use the first matching file; \
+            echo $finfile \"=>\" $outfile;                                                                    : Output diagnostic; \
+            cp $finfile $outfile;                                                                             : Copy to the output file; \
         done; \
 	}; f"
     genclangconfig = !cd $(git root) && git cpfilesfrom $(git superroot) .clang-format=dot-clang-format .clang-tidy=dot-clang-tidy
     clangformat = "!f() { \
-        pattern=; \
+        pattern=;                                                                         : Match pattern is initially empty; \
         : .m and .mm excluded below; \
-        for i in c cc cp cpp c++ cxx hh hpp hxx cu cuh proto protodevel java js ts cs; do \
-            pattern=\"$pattern -e \\.$i$\"; \
+        for i in c cc cp cpp c++ cxx hh hpp hxx cu cuh proto protodevel java js ts cs; do : Loop over all supported file extensions; \
+            pattern=\"$pattern -e \\.$i$\";                                               : Add extension to pattern matching; \
         done; \
-        files=$(${1:-git diff --name-only --cached} | grep $pattern); \
+        files=$(${1:-git diff --name-only --cached} | grep $pattern);                     : Unless argument specified, apply to files in index; \
         IFS=\"\n\";                                                                       : Use newlines as delimiter; \
-        for i in $files; do\
-            clang-format -i $i; \
+        for i in $files; do                                                               : Loop over all selected files; \
+            clang-format -i $i;                                                           : Apply clang-format; \
         done; \
     }; f"
     clangtidy = "!f() { \
-        [ $# -lt 1 ] && echo Usage: clangtidy path && return 1; : Ensure proper number of arguments; \
-        path=$1; \
-        pattern=; \
-        for i in c cc cp cpp c++ cxx; do \
-            pattern=\"$pattern -e \\.$i$\"; \
+        [ $# -lt 1 ] && echo Usage: clangtidy buildpath && return 1   : Ensure proper number of arguments; \
+        path=$1;                                                      : Get build path from first argument; \
+        pattern=;                                                     : Match pattern is initially empty; \
+        for i in c cc cp cpp c++ cxx; do                              : Loop over all supported file extensions; \
+            pattern=\"$pattern -e \\.$i$\";                           : Add extension to pattern matching; \
         done; \
-        files=$(${2:-git diff --name-only --cached} | grep $pattern); \
-        IFS=\"\n\";                                             : Use newlines as delimiter; \
-        for i in $files; do\
-            clang-tidy -p $path -fix $i; \
+        files=$(${2:-git diff --name-only --cached} | grep $pattern); : Unless argument specified, apply to files in index; \
+        IFS=\"\n\";                                                   : Use newlines as delimiter; \
+        for i in $files; do                                           : Loop over all selected files; \
+            clang-tidy -p $path -fix $i;                              : Apply clang-tidy; \
         done; \
     }; f"
 	# misc
