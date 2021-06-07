@@ -824,7 +824,7 @@
 	# versioning
 	gmversion = "!f() { \
 		if [ $# -gt 0 ]; then max=$1; shift; fi;                                                       : Get maximum revision if provided; \
-		[ $max=. ] && unset max;                                                                       : If first argument is ., assume maximum version; \
+		[ ${max}x = .x ] && unset max;                                                                       : If first argument is ., assume maximum version; \
 		if [ -d $(git root)/.git/modules ]; then                                                       : If a superproject; \
 			git -c 'alias.smquiet=!true' smga gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-}; : Execute recursive gm* query commands; \
 		else                                                                                           : Else regular ; \
