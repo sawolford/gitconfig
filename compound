@@ -251,6 +251,31 @@
 		echo $rv | tee /dev/stderr >/dev/null; \
 	}; f"
 	gpgverifysum = "!f() { git gpgverifyall >/dev/null; }; f"
+	# diff
+	dir = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git di ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
+	dtr = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git dt ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
+	dtkr = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git dtk -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
+	dtmr = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git dtm -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
+	dtir = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git dti ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
+	dtvr = "!f() { \
+		if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+		git dtv ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+	}; f"
     # submodules
 	smfone = "!f() { \
 		[ $# -ne 1 ] && echo Usage: smfone command && return; : Ensure proper number of arguments; \
@@ -806,6 +831,8 @@
 			git gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-};                               : Execute regular gm* query commands; \
 		fi; \
 	}; f"
+	head = !less +gq
+	tail = !less +Gq
 	gmprefix = "!f() { \
 		broot=$(git broot);                : Get toplevel folder name; \
 		git gm | nl -s \":      $broot:\"; : Output log with toplevel folder name in prefix; \

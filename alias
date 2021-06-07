@@ -52,12 +52,6 @@
 	dtmsd = difftool -y --tool=meld --staged
 	dtis = difftool -y --tool=icdiff --staged
 	dtvs = difftool -y --tool=vimdiff --staged
-	dir = "!f() { git di ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtr = "!f() { git dt ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtkr = "!f() { git dtk -d ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtmr = "!f() { git dtm -d ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtir = "!f() { git dti ${1:-HEAD}^..${1:-HEAD}; }; f"
-	dtvr = "!f() { git dtv ${1:-HEAD}^..${1:-HEAD}; }; f"
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
