@@ -787,16 +787,20 @@
 	}; f"
 	# shallow
 	goshallow = "!f() { \
-		git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/master';   : Map only master branch; \
-		BRANCH=$(git name HEAD);                                                          : Get current branch name; \
-		IFS=\"\n\";                                                                       : Use newlines as delimiter; \
-		for i in $(git branch -r --format=\"%(refname)\" | sed \"s,refs/remotes/,,\"); do : Loop over remote branch names; \
-			[ $i != \"origin/$BRANCH\" ] && git branch -rd $i;                            : Delete other remote branch; \
+		BRANCH=$(git name HEAD);                                                            : Get current branch name; \
+		git config remote.origin.fetch \"+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH\"; : Map only current branch; \
+		IFS=\"\n\";                                                                         : Use newlines as delimiter; \
+		for i in $(git branch --format=\"%(refname)\" | sed \"s,refs/heads/,,\"); do        : Loop over local branch names; \
+			[ $i != $BRANCH ] && git branch -D $i;                                          : Delete other local branch; \
 		done; \
-		git fetchd 1;                                                                     : Fetch most recent commit; \
-		git rbranch;                                                                      : Reset to that upstream branch; \
-		git cleanup;                                                                      : Expire unreferenced commits; \
-		git gcprune;                                                                      : Garbage collect; \
+		for i in $(git branch -r --format=\"%(refname)\" | sed \"s,refs/remotes/,,\"); do   : Loop over remote branch names; \
+			[ $i != origin/$BRANCH ] && git branch -rD $i;                                  : Delete other remote branch; \
+		done; \
+		git tag | xargs git tag -d;                                                         : Clear out all tags; \
+		git fetchd 1;                                                                       : Fetch most recent commit; \
+		git rbranch;                                                                        : Reset to that upstream branch; \
+		git cleanup;                                                                        : Expire unreferenced commits; \
+		git gcprune;                                                                        : Garbage collect; \
 	}; f"
 	pullshallow = "!f() { \
 		if ! git grafted; then  : If not a shallow clone; \

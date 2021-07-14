@@ -9,7 +9,9 @@
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
 	firsthash = !git rev-list --abbrev-commit HEAD | tail -n 1
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
-	name = !git name-rev --name-only
+	locname = "!f() { git name-rev --name-only --exclude='tags/*' --exclude='remotes/*' ${1:-HEAD}; }; f"
+	remname = "!f() { git name-rev --name-only --refs='remotes/*' --exclude='remotes/*/HEAD' ${1:-HEAD}; }; f"
+	name = "!f() { git rev-parse --abbrev-ref ${1:-HEAD}; }; f"
 	sh = "!f() { \"$@\"; }; f"
 	vartrue = "!f() { $(git config variable.$1); }; f"
 	varfalse = "!f() { ! $(git config variable.$1); }; f"
@@ -123,7 +125,7 @@
 	# shallow
 	cloneshallow = clone --depth 1
 	grafted = "!f() { git log --oneline --format=%D | grep -q ^grafted; }; f"
-	fetchd = "!f() { git fetch --depth ${1:-1}; }; f"
+	fetchd = "!f() { git fetch --no-tags --depth ${1:-1}; }; f"
 	rbranch = reset --hard @{u}
 	gcprune = gc --prune=now
 	# stash
