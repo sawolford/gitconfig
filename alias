@@ -11,6 +11,8 @@
 	ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
 	name = !git name-rev --name-only
 	sh = "!f() { \"$@\"; }; f"
+	vartrue = "!f() { $(git config variable.$1); }; f"
+	varfalse = "!f() { ! $(git config variable.$1); }; f"
 	# alias
 	al = "!f() { git config --list | grep alias | sed \"s,;.*,,\"; }; f"
 	alg = "!f() { git al | grep ${1:-.}; }; f"
@@ -128,8 +130,7 @@
 	stlist = stash list
 	stshow = stash show
 	# submodule
-	smquiet = !false
-	smflags = !git smquiet && echo --quiet
+	smflags = !git vartrue smquiet && echo --quiet
 	clonesub = clone --recurse-submodules --remote-submodules
 	sm = submodule
 	sminit = !git smg init

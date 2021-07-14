@@ -1,0 +1,3 @@
+[variable]
+    dohtml = false
+    smquiet = false

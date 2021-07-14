@@ -1,3 +1,2 @@
 [alias]
-    ingitwindows = !false
     gitconfigtype = !echo unix

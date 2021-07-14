@@ -1,10 +1,14 @@
 [alias]
-    # config
-	dohtml = !true
 	# helper
 	ingitbash = !uname -s | grep ^MINGW >/dev/null
 	ingitcmd = !uname -s | grep ^MSYS >/dev/null
-	ingitwindows = "!f() { if (git ingitbash || git ingitcmd); then return 0; else return 1; fi; }; f"
+	ingitwindows = "!f() { if git ingitbash || git ingitcmd; then return 0; else return 1; fi; }; f"
+	configtype = "!f() { \
+		git ingitbash && echo git-bash; \
+		git ingitcmd && echo cmd; \
+		git ingitwindows && echo windows; \
+		git ingitwindows || echo unix; \
+	}; f"
 	haveman = !which man >/dev/null 2>&1
 	havepandoc = !which pandoc >/dev/null 2>&1
 	slashsuperroot = "!f() { if git ingitbash; then git superroot | sed \"s,\\(.\\):/,/\\L\\1/,\"; else git superroot; fi; }; f"
@@ -168,7 +172,7 @@
 			docpath=$(cygpath -m $docpath);                                                     : Change to windows path with forward slashes; \
 			htmlpath=$(cygpath -m $htmlpath);                                                   : Change to windows path with forward slashes; \
 		fi;                                                                                     : Close if statement; \
-		if git dohtml; then git web--browse \"$htmlpath/git-$1.html\";                          : If should do html, open web browser; \
+		if git vartrue dohtml; then git web--browse \"$htmlpath/git-$1.html\";                          : If should do html, open web browser; \
 		elif git haveman; then                                                                  : If should man pages, then; \
 			export MANPATH=$docpath;                                                            : Set environment variable for man execution; \
 			man git-$1 | tail -n +2 | command;                                                  : Execute man without uninteresting parts; \
@@ -304,14 +308,14 @@
 	smfa = "!f() { : git man smfa; \
 		[ $# -lt 1 ] && echo Usage: smfa command && return; : Ensure proper number of arguments; \
 		git smf \"$@\";                                     : Iterate; \
-		git smquiet || echo Entering \\'.\\';               : Output current path; \
+		git vartrue smquiet || echo Entering \\'.\\';               : Output current path; \
 		\"$@\";                                             : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	smga = "!f() { : git man smga; \
 		[ $# -lt 1 ] && echo Usage: smga command && return; : Ensure proper number of arguments; \
 		git smg \"$@\";                                     : Iterate; \
-		git smquiet || echo Entering \\'.\\';               : Output current path; \
+		git vartrue smquiet || echo Entering \\'.\\';               : Output current path; \
 		git \"$@\";                                         : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
@@ -824,9 +828,9 @@
 	# versioning
 	gmversion = "!f() { \
 		if [ $# -gt 0 ]; then max=$1; shift; fi;                                                       : Get maximum revision if provided; \
-		[ ${max}x = .x ] && unset max;                                                                       : If first argument is ., assume maximum version; \
-		if [ -d $(git root)/.git/modules ]; then                                                       : If a superproject; \
-			git -c 'alias.smquiet=!true' smga gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-}; : Execute recursive gm* query commands; \
+		[ ${max}x = .x ] && unset max;                                                                 : If first argument is ., assume maximum version; \
+		if [ -d \"$(git root)/.git/modules\" ]; then                                                   : If a superproject; \
+			git -c variable.smquiet=true smga gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-}; : Execute recursive gm* query commands; \
 		else                                                                                           : Else regular ; \
 			git gmprefix | git gmglobal \"$@\" | git gmmaximum ${max:-};                               : Execute regular gm* query commands; \
 		fi; \

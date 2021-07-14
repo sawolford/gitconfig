@@ -3,6 +3,7 @@
 	decorate = short
 	status = auto
 [core]
+	pager = less
 	autocrlf = false
 	excludesFile = ~/gitconfig/ignore
 [fetch]

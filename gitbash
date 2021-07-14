@@ -1,5 +1,4 @@
 [include]
     path = windows
 [alias]
-    ingitbash = !true
     gitconfigplat = !echo gitbash

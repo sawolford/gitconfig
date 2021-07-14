@@ -24,3 +24,5 @@ else platform=linux
 fi
 echo "	path = $relpath/$platform" | tee -a $ofile
 echo "	path = $relpath/local" | tee -a $ofile
+echo "[alias]" | tee -a $ofile
+echo "	configpath = !echo $path" | tee -a $ofile
