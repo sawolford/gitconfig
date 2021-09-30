@@ -12,7 +12,10 @@
 	locname = "!f() { git name-rev --name-only --exclude='tags/*' --exclude='remotes/*' ${1:-HEAD}; }; f"
 	remname = "!f() { git name-rev --name-only --refs='remotes/*' --exclude='remotes/*/HEAD' ${1:-HEAD}; }; f"
 	name = "!f() { git rev-parse --abbrev-ref ${1:-HEAD}; }; f"
+	jsontool = "!f() { $(git varvalue python) -m json.tool \"$@\"; }; f"
 	sh = "!f() { \"$@\"; }; f"
+	varset = "!f() { git config variable.$1 >/dev/null 2>&1; }; f"
+	varvalue = "!f() { echo $(git config variable.$1); }; f"
 	vartrue = "!f() { $(git config variable.$1); }; f"
 	varfalse = "!f() { ! $(git config variable.$1); }; f"
 	# alias

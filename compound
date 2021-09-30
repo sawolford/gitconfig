@@ -1089,3 +1089,67 @@
 		fi; \
 		return 0;                                         : Return zero; \
 	}; f"
+	# gitlab
+	gitlabapi1 = "!f() { : ; \
+		[ $# -ne 1 ] && echo Usage: gitlabapi1 call && return 1; : ; \
+		git varset gitlabtoken1 || { >&2 echo gitlabapi1: must set git config variable.gitlabtoken1; return 1; }; : ; \
+		token=$(git varvalue gitlabtoken1); : ; \
+		git varset gitlabhost || { >&2 echo gitlabapi1: must set git config variable.gitlabhost; return 1; }; : ; \
+		host=$(git varvalue gitlabhost); : ; \
+		curl -sSkx socks5h://localhost:8080 --header \"PRIVATE-TOKEN: $token\" \"https://$host/$1\"; \
+	}; f"
+	gitlabapi2 = "!f() { : ; \
+		[ $# -lt 1 ] && { echo Usage: gitlabapi2 call [arguments]; return 1; }; : ; \
+		git varset gitlabtoken2 || { >&2 echo gitlabapi2: must set git config variable.gitlabtoken2; return 1; }; : ; \
+		token=$(git varvalue gitlabtoken2); : ; \
+		git varset gitlabhost || { >&2 echo gitlabapi2: must set git config variable.gitlabhost; return 1; }; : ; \
+		host=$(git varvalue gitlabhost); : ; \
+		url=$1; shift; : ; \
+		cmd=\"curl -sSkx socks5h://localhost:8080 -X POST -F token=$token \"https://$host/$url\" $*\"; : ; \
+		echo $cmd >&2; $cmd; : ; \
+	}; f"
+	gitlab = "!f() { : ; \
+		case $1 in \
+			projects) : ; \
+				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool; : ; ;; \
+			path2id) : ; \
+				shift; \
+				[ $# -lt 1 ] && { echo Usage: gitlab path2id path; return 1; }; : ; \
+				pattern='s@.*\"id\":([[:digit:]]+),.*\"path_with_namespace\":\"'; \
+				pattern+=$1; \
+				pattern+='\".*@\\1@gi'; \
+				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | sed -E \"$pattern\"; \
+				printf \"\\n\"; \
+				;; \
+			listpath) : ; \
+				shift; \
+				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool | \
+					grep -i ${1:-.} | grep path_with_namespace | sed \"s/.*: .\\(.*\\).,/\\1/\" | \
+					grep -v gitlab-instance | sort; : ; ;; \
+			listname) : ; \
+				shift; \
+				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool | \
+					grep -i ${1:-.} | grep name_with_namespace | sed \"s/.*: .\\(.*\\).,/\\1/\" | sed \"s, / ,/,g\" | \
+					grep -v \"GitLab Instance\" | sort; : ; ;; \
+			pipeline) : ; \
+				shift; \
+				[ $# -lt 2 ] && { echo Usage: gitlab pipeline id ref [var=value ...]; return 1; }; : ; \
+				id=$1; shift; : ; \
+				ref=$1; shift; : ; \
+				args=\"-F ref=$ref -F variables[GIT_DEPTH]=0\"; : ; \
+				while [ $# -gt 0 ]; do : ; \
+					arg=$(echo $1 | sed \"s,=,\\]=,\"); : ; \
+					args+=\" -F variables[$arg\"; \
+					shift; : ; \
+				done; \
+				git gitlabapi2 \"api/v4/projects/$id/trigger/pipeline\" $args | git jsontool; : ; \
+				;; \
+			*) \
+				echo Usage: gitlab projects; : ; \
+				echo Usage: gitlab path2id path; : ; \
+				echo Usage: gitlab listpath [grepstr]; : ; \
+				echo Usage: gitlab listname [grepstr]; : ; \
+				echo Usage: gitlab pipeline id ref; : ; \
+				return 1; : ; ;; \
+		esac \
+	}; f"
