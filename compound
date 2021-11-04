@@ -1090,68 +1090,70 @@
 		return 0;                                         : Return zero; \
 	}; f"
 	# gitlab
-	gitlabapi1 = "!f() { : ; \
-		[ $# -ne 1 ] && echo Usage: gitlabapi1 call && return 1; : Ensure proper number of arguments; \
-		git varset gitlabtoken1 || { >&2 echo gitlabapi1: must set git config variable.gitlabtoken1; return 1; }; : Ensure gitlabtoken1 variable is set; \
-		token=$(git varvalue gitlabtoken1); : Get value of gitlabtoken1 variable; \
-		git varset gitlabhost || { >&2 echo gitlabapi1: must set git config variable.gitlabhost; return 1; }; : Ensure gitlabhost variable is set; \
-		host=$(git varvalue gitlabhost); : Get value of gitlabhost variable; \
-		url=$1; shift; : Get value of URL; \
-		cmd=\"curl -sSkx socks5h://localhost:8080 --header PRIVATE-TOKEN:$token \"https://$host/$url\"\"; : Construct API command; \
-		: echo $cmd >&2; $cmd; : Execute API call; \
+	gitlabapiprojects = "!f() { : ; \
+		[ $# -ne 1 ] && echo Usage: gitlabapiprojects call && return 1;                                                  : Ensure proper number of arguments; \
+		git varset gitlabtoken || { >&2 echo gitlabapiprojects: must set git config variable.gitlabtoken; return 1; };   : Ensure gitlabtoken variable is set; \
+		token=$(git varvalue gitlabtoken);                                                                               : Get value of gitlabtoken variable; \
+		git varset gitlabhost || { >&2 echo gitlabapiprojects: must set git config variable.gitlabhost; return 1; };     : Ensure gitlabhost variable is set; \
+		host=$(git varvalue gitlabhost);                                                                                 : Get value of gitlabhost variable; \
+		url=$1; shift;                                                                                                   : Get value of URL; \
+		cmd=\"curl -sSkx socks5h://localhost:8080 --header PRIVATE-TOKEN:$token \"https://$host/api/v4/projects$url\"\"; : Construct API command; \
+		: echo $cmd >&2; $cmd;                                                                                           : Execute API call; \
 	}; f"
-	gitlabapi2 = "!f() { : ; \
-		[ $# -lt 1 ] && { echo Usage: gitlabapi2 call [arguments]; return 1; }; : Ensure proper number of arguments; \
-		git varset gitlabtoken2 || { >&2 echo gitlabapi2: must set git config variable.gitlabtoken2; return 1; }; : Ensure gitlabtoken2 variable is set; \
-		token=$(git varvalue gitlabtoken2); : Get value of gitlabtoken2 variable; \
-		git varset gitlabhost || { >&2 echo gitlabapi2: must set git config variable.gitlabhost; return 1; }; : Ensure gitlabhost variable is set; \
-		host=$(git varvalue gitlabhost); : Get value of gitlabhost variable; \
-		url=$1; shift; : Get value of URL; \
-		cmd=\"curl -sSkx socks5h://localhost:8080 -X POST -F token=$token \"https://$host/$url\" $*\"; : Construct API command; \
-		: echo $cmd >&2; $cmd; : Execute API call; \
+	gitlabapiproject = "!f() { : ; \
+		[ $# -lt 2 ] && { echo Usage: gitlabapiproject id call [arguments]; return 1; };                                    : Ensure proper number of arguments; \
+		id=$1; shift;                                                                                                       : Get value of id; \
+		git varset gitlabtoken$id || { >&2 echo gitlabapiproject: must set git config variable.gitlabtoken$id; return 1; }; : Ensure gitlabtoken$id variable is set; \
+		token=$(git varvalue gitlabtoken$id);                                                                               : Get value of gitlabtoken$id variable; \
+		git varset gitlabhost || { >&2 echo gitlabapiproject: must set git config variable.gitlabhost; return 1; };         : Ensure gitlabhost variable is set; \
+		host=$(git varvalue gitlabhost);                                                                                    : Get value of gitlabhost variable; \
+		url=$1; shift;                                                                                                      : Get value of URL; \
+		cmd=\"curl -sSkx socks5h://localhost:8080 -X POST -F token=$token \"https://$host/api/v4/projects/$id$url\" $*\";   : Construct API command; \
+		: echo $cmd >&2; $cmd;                                                                                              : Execute API call; \
 	}; f"
 	gitlab = "!f() { : ; \
 		case $1 in \
 			projects) \
-				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool; : List all projects; ;; \
+				{ printf \"[\"; git gitlabapiprojects \"?per_page=1000\"; printf \"]\"; } | git jsontool;               : List all projects; ;; \
 			path2id) \
-				shift; : Discard command name; \
-				[ $# -lt 1 ] && { echo Usage: gitlab path2id path; return 1; }; : Ensure proper number of arguments; \
-				pattern='s@.*\"id\":([[:digit:]]+),.*\"path_with_namespace\":\"'; : Construct first part of regex pattern; \
-				pattern+=$1; : Add path to regex pattern; \
-				pattern+='\".*@\\1@gi'; : Construct last part of regex pattern; \
-				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | sed -E \"$pattern\"; : Call API; \
-				printf \"\\n\"; : Append newline to output; \
+				shift;                                                                                                  : Discard command name; \
+				[ $# -lt 1 ] && { echo Usage: gitlab path2id path; return 1; };                                         : Ensure proper number of arguments; \
+				pattern='s@.*\"id\":([[:digit:]]+),.*\"path_with_namespace\":\"';                                       : Construct first part of regex pattern; \
+				pattern+=$1;                                                                                            : Add path to regex pattern; \
+				pattern+='\".*@\\1@gi';                                                                                 : Construct last part of regex pattern; \
+				{ printf \"[\"; git gitlabapiprojects \"?per_page=1000\"; printf \"]\"; } | sed -E \"$pattern\";        : Call API; \
+				printf \"\\n\";                                                                                         : Append newline to output; \
 				;; \
 			listpath) \
-				shift; : Discard command name; \
-				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool | \
+				shift;                                                                                                  : Discard command name; \
+				{ printf \"[\"; git gitlabapiprojects \"?per_page=1000\"; printf \"]\"; } | git jsontool | \
 					grep path_with_namespace | sed \"s/.*: .\\(.*\\).,/\\1/\" | grep -i ${1:-.} | \
-					grep -v gitlab-instance | sort; : Call API; ;; \
+					grep -v gitlab-instance | sort;                                                                     : Call API; ;; \
 			listname) \
-				shift; : Discard command name; \
-				{ printf \"[\"; git gitlabapi1 \"api/v4/projects?per_page=1000\"; printf \"]\"; } | git jsontool | \
+				shift;                                                                                                  : Discard command name; \
+				{ printf \"[\"; git gitlabapiprojects \"?per_page=1000\"; printf \"]\"; } | git jsontool | \
 					grep name_with_namespace | sed \"s/.*: .\\(.*\\).,/\\1/\" | sed \"s, / ,/,g\" | grep -i ${1:-.} | \
-					grep -v \"GitLab Instance\" | sort; : Call API; ;; \
+					grep -v \"GitLab Instance\" | sort;                                                                 : Call API; ;; \
 			pipeline) \
 				shift; : Discard command name; \
-				[ $# -lt 2 ] && { echo Usage: gitlab pipeline id ref [var=value ...]; return 1; }; : Ensure proper number of arguments; \
-				id=$1; shift; : Get value of id; \
-				ref=$1; shift; : Get value of ref; \
-				args=\"-F ref=$ref -F variables[GIT_DEPTH]=0\"; : Construct first part of API command; \
-				while [ $# -gt 0 ]; do : Loop over remaining arguments for passing variables to API command; \
-					arg=$(echo $1 | sed \"s,=,\\]=,\"); : Change = to ]=; \
-					args+=\" -F variables[$arg\"; : Use regex to get variable in proper form for API command; \
-					shift; : Get next argument; \
+				[ $# -lt 2 ] && { echo Usage: gitlab pipeline id ref [var=value ...]; return 1; };                      : Ensure proper number of arguments; \
+				id=$1; shift;                                                                                           : Get value of id; \
+				ref=$1; shift;                                                                                          : Get value of ref; \
+				args=\"-F ref=$ref -F variables[GIT_DEPTH]=0\";                                                         : Construct first part of API command; \
+				while [ $# -gt 0 ]; do                                                                                  : Loop over remaining arguments for passing variables to API command; \
+					arg=$(echo $1 | sed \"s,=,\\]=,\");                                                                 : Change = to ]=; \
+					args+=\" -F variables[$arg\";                                                                       : Use regex to get variable in proper form for API command; \
+					shift;                                                                                              : Get next argument; \
 				done; \
-				git gitlabapi2 \"api/v4/projects/$id/trigger/pipeline\" $args | git jsontool; : Call API; \
+				git gitlabapiproject $id \"/trigger/pipeline\" $args | git jsontool;                                    : Call API; \
 				;; \
 			*) \
-				echo Usage: gitlab projects; : Echo usage for projects; \
-				echo Usage: gitlab path2id path; : Echo usage for path2id; \
-				echo Usage: gitlab listpath [grepstr]; : Echo usage for listpath; \
-				echo Usage: gitlab listname [grepstr]; : Echo usage for listname; \
-				echo Usage: gitlab pipeline id ref [variable=value ...]; : Echo usage for pipeline; \
-				return 1; : Return error code; ;; \
+				echo Usage: gitlab projects;                                                                            : Echo usage for projects; \
+				echo Usage: gitlab path2id path;                                                                        : Echo usage for path2id; \
+				echo Usage: gitlab listpath [grepstr];                                                                  : Echo usage for listpath; \
+				echo Usage: gitlab listname [grepstr];                                                                  : Echo usage for listname; \
+				echo Usage: gitlab pipeline id ref [variable=value ...];                                                : Echo usage for pipeline; \
+				return 1;                                                                                               : Return error code; \
+				;; \
 		esac \
 	}; f"
