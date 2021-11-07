@@ -31,6 +31,27 @@
 	prheader = "!f() { echo $(git header '>>>'); }; f"
 	prinfo = "!f() { echo $(git info '---'); }; f"
 	prnl = "!f() { printf \"%s\\12\" \"$@\"; }; f"
+	# misc
+	cobranch = "!f() { : ; \
+		if [ \"$(git lname HEAD)\" = \"$(git lname master)\" ]; then : ; \
+			git co master; : ; \
+			return 0; : ; \
+		fi; \
+		branch=\"\"; : ; \
+		for i in $(git for-each-ref --format=\"%(refname:short)\" refs/heads/); do : ; \
+			[ \"$(git lname HEAD)\" = \"$(git lname $i)\" ] || continue; : ; \
+			if [ ! -z \"$branch\" ]; then : ; \
+				>&2 echo cobranch: HEAD could be on \\\"$branch\\\" or \\\"$i\\\".; : ; \
+				return 1; : ; \
+			fi; \
+			branch=$i; : ; \
+		done; \
+		if [ ! -z \"$branch\" ]; then : ; \
+			git co $branch; : ; \
+			return 0; : ; \
+		fi; \
+		>&2 echo cobranch: HEAD is not on a branch.; : ; \
+	}; f"
 	# bundle
 	verifybundle = "!f() { \
 		[ $# -gt 1 ] && echo Usage: verifybundle filename && return 1; : Ensure proper number of arguments; \
@@ -52,7 +73,7 @@
 		git fetch -u \"${1:-$(git broot).bundle}\" \"refs/*:refs/*\"; : Fetch from bundle and keep refs; \
 		git rhard;                                                    : Return working copy to blank slate; \
 		IFS=\"\n\";                                                   : Use newline as separator; \
-		for remote in $(git branch -r | grep -vE \"HEAD\"); do        : Iterate over all remote branches; \
+		for remote in $(git remotebranches | grep -vE HEAD); do        : Iterate over all remote branches; \
 			git co ${remote#*/};                                      : Checkout local branch corresponding to remote branch; \
 			git branch -u ${remote/  /};                              : Set the upstream for the local branch; \
 		done; \
@@ -282,22 +303,22 @@
 	}; f"
     # submodules
 	smfone = "!f() { \
-		[ $# -ne 1 ] && echo Usage: smfone command && return; : Ensure proper number of arguments; \
-		git sm $(git smflags) foreach \"$1\";              : Iterate; \
+		[ $# -ne 1 ] && echo Usage: smfone command && return;       : Ensure proper number of arguments; \
+		git sm $(git smflags) foreach $(git smforeachflags) \"$1\"; : Iterate; \
 	}; f"
 	smf = "!f() { : git man smf; \
 		[ $# -lt 1 ] && echo Usage: smf command && return; : Ensure proper number of arguments; \
 		: Iterate; \
 		[ $# -eq 1 ] && git smfone \"$1; true\"; \
-		[ $# -eq 2 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\"; true\"; \
-		[ $# -eq 3 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true\"; \
-		[ $# -eq 4 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true\"; \
-		[ $# -eq 5 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true\"; \
-		[ $# -eq 6 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true\"; \
-		[ $# -eq 7 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true\"; \
-		[ $# -eq 8 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true\"; \
-		[ $# -eq 9 ] && git sm $(git smflags) foreach \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true\"; \
-		[ $# -gt 9 ] && git sm $(git smflags) foreach \"$@\"; \
+		[ $# -eq 2 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\"; true\"; \
+		[ $# -eq 3 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true\"; \
+		[ $# -eq 4 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true\"; \
+		[ $# -eq 5 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true\"; \
+		[ $# -eq 6 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true\"; \
+		[ $# -eq 7 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true\"; \
+		[ $# -eq 8 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true\"; \
+		[ $# -eq 9 ] && git sm $(git smflags) foreach $(git smforeachflags) \"\\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\" \\\"$9\\\"; true\"; \
+		[ $# -gt 9 ] && git sm $(git smflags) foreach $(git smforeachflags) \"$@\"; \
 		return 0;                                          : Return zero; \
 	}; f"
 	smg = "!f() { : git man smg; \
@@ -308,49 +329,16 @@
 	smfa = "!f() { : git man smfa; \
 		[ $# -lt 1 ] && echo Usage: smfa command && return; : Ensure proper number of arguments; \
 		git smf \"$@\";                                     : Iterate; \
-		git vartrue smquiet || echo Entering \\'.\\';               : Output current path; \
+		git vartrue smquiet || echo Entering \\'.\\';       : Output current path; \
 		\"$@\";                                             : Execute in container; \
 		return 0;                                           : Return zero; \
 	}; f"
 	smga = "!f() { : git man smga; \
 		[ $# -lt 1 ] && echo Usage: smga command && return; : Ensure proper number of arguments; \
 		git smg \"$@\";                                     : Iterate; \
-		git vartrue smquiet || echo Entering \\'.\\';               : Output current path; \
+		git vartrue smquiet || echo Entering \\'.\\';       : Output current path; \
 		git \"$@\";                                         : Execute in container; \
 		return 0;                                           : Return zero; \
-	}; f"
-	lssubmodulesbr = "!f() { \
-		IFS=\"\n\";                                                        : Use newline as separator; \
-		for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
-			match=\"submodule.$sub.branch=\";                              : Match branch name; \
-			if git catsubmodules | grep \"$match\" >/dev/null 2>&1; then   : If submodule is on a branch; \
-				bname=$(git catsubmodules | grep $match | sed s,$match,,); : Extract the branch name; \
-				echo $sub=$bname;                                          : Output the submodule and branch info; \
-			else                                                           : Submodule is not on a branch; \
-				echo $sub=;                                                : Output the submodule info; \
-			fi; \
-		done; \
-		return 0;                                                          : Return zero; \
-	}; f"
-	brsubmodules = "!f() { \
-		if [ $# -gt 0 ]; then                                                  : If matching a branch; \
-			IFS=\"\n\";                                                        : Use newline as separator; \
-			for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
-				match=\"submodule.$sub.branch=$1\";                            : Match branch name; \
-				if git catsubmodules | grep \"$match\" >/dev/null 2>&1; then   : If submodule is on the named branch; \
-					printf \"%s\\12\" $sub;                                    : Output the submodule info; \
-				fi; \
-			done; \
-		else                                                                   : Else not matching a branch; \
-			IFS=\"\n\";                                                        : Use newline as separator; \
-			for sub in $(git lssubmodules); do                                 : Loop over all submodules; \
-				match=\"submodule.$sub.branch\";                               : Match no branch name; \
-				if ! git catsubmodules | grep \"$match\" >/dev/null 2>&1; then : If submodule is not on a branch; \
-					printf \"%s\\12\" $sub;                                    : Output the submodule info; \
-				fi; \
-			done; \
-		fi; \
-		return 0;                                                              : Return zero; \
 	}; f"
 	fismf = "!f() { \
 		[ $# -lt 2 ] && echo Usage: fsmf filter command && return;                  : Ensure proper number of arguments; \
@@ -786,17 +774,20 @@
 		return 0;                                                            : Return zero; \
 	}; f"
 	# shallow
+	localbranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/heads/; }; f"
+	localtags = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/tags/; }; f"
+	deletelocalbranches = "!f() { git branch -D $(git localbranches); }; f"
+	deletelocaltags = "!f() { git tag -d $(git localtags); }; f"
+	remotebranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/remotes/; }; f"
+	remotetags = "!f() { git ls-remote --refs --tags ${1:-origin} | sed 's,.*refs/tags/,,'; }; f"
+	deleteremotebranches = "!f() { git branch -rD $(git remotebranches); }; f"
+	deleteremotetags = "!f() { git pushd $(git remotetags); }; f"
 	goshallow = "!f() { \
 		BRANCH=$(git name HEAD);                                                            : Get current branch name; \
 		git config remote.origin.fetch \"+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH\"; : Map only current branch; \
-		IFS=\"\n\";                                                                         : Use newlines as delimiter; \
-		for i in $(git branch --format=\"%(refname)\" | sed \"s,refs/heads/,,\"); do        : Loop over local branch names; \
-			[ $i != $BRANCH ] && git branch -D $i;                                          : Delete other local branch; \
-		done; \
-		for i in $(git branch -r --format=\"%(refname)\" | sed \"s,refs/remotes/,,\"); do   : Loop over remote branch names; \
-			[ $i != origin/$BRANCH ] && git branch -rD $i;                                  : Delete other remote branch; \
-		done; \
-		git tag | xargs git tag -d;                                                         : Clear out all tags; \
+		git deletelocalbranches;                                                            : Delete local branches; \
+		git deleteremotebranches;                                                           : Delete remote branches; \
+		git deletelocaltags;                                                                : Delete local tags; \
 		git fetchd 1;                                                                       : Fetch most recent commit; \
 		git rbranch;                                                                        : Reset to that upstream branch; \
 		git cleanup;                                                                        : Expire unreferenced commits; \

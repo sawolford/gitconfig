@@ -12,7 +12,10 @@
 	locname = "!f() { git name-rev --name-only --exclude='tags/*' --exclude='remotes/*' ${1:-HEAD}; }; f"
 	remname = "!f() { git name-rev --name-only --refs='remotes/*' --exclude='remotes/*/HEAD' ${1:-HEAD}; }; f"
 	name = "!f() { git rev-parse --abbrev-ref ${1:-HEAD}; }; f"
+	lname = "!f() { git rev-parse ${1:-HEAD}; }; f"
 	brname = "!f() { git name \"$@\" | grep -v \"^master$\"; }; f"
+	branched = "!f() { [ \"$(git name)\" != \"master\" ] && git broot; }; f"
+	branchedname = "!f() { [ \"$(git name)\" != \"master\" ] && echo $(git broot)=$(git brname); }; f"
 	jsontool = "!f() { $(git varvalue python) -m json.tool \"$@\"; }; f"
 	sh = "!f() { \"$@\"; }; f"
 	varset = "!f() { git config variable.$1 >/dev/null 2>&1; }; f"
@@ -64,11 +67,14 @@
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
 	gm = log --reverse --abbrev-commit --pretty=minimal
-	gla = !git gl --all --reflog
+	gla = !git gl --all
+	glr = !git gl --all --reflog
 	glv = log --name-status
 	glva = !git glv --all --reflog
-	gli = !git fetch && git gl ..@{u}
-	glo = !git fetch && git gl @{u}..
+	glil = !git gl ..@{u}
+	glol = !git gl @{u}..
+	gli = !git fetch && git glil
+	glo = !git fetch && git glol
 	authors = log --format='%aN'
 	authorsreverse = log --format='%aN' --reverse
 	authorssimple = "!f() { git authorsreverse \"$@\" | awk '!visited[$0]++' | tac; }; f"
@@ -108,7 +114,7 @@
 	rsho = remote set-head origin
 	recommit = !git commit --allow-empty-message -t uncommit.txt
 	recommita = !git commit --allow-empty-message -t uncommit.txt -a
-	grepall = "!f() {  git grep $1 $(git rev-list --all -- ${2:-.}) -- ${2:-.}; }; f"
+	grepall = "!f() {  git grep \"$1\" $(git rev-list --all -- \"${2:-.}\") -- \"${2:-.}\"; }; f"
 	cofirst = !git checkout $(git firsthash)
 	# push
 	pushuu  = push --set-upstream
@@ -137,6 +143,7 @@
 	stshow = stash show
 	# submodule
 	smflags = !git vartrue smquiet && echo --quiet
+	smforeachflags = !git vartrue smrecursive && echo --recursive
 	clonesub = clone --recurse-submodules --remote-submodules
 	sm = submodule
 	sminit = !git smg init

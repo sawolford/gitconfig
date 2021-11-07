@@ -1,4 +1,5 @@
 [variable]
     dohtml = false
     smquiet = false
+    smrecursive = true
     python = python
