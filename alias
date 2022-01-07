@@ -86,7 +86,6 @@
 	authorssimple = "!f() { git authorsreverse \"$@\" | awk '!visited[$0]++' | tac; }; f"
 	find = "!f() { git log --all --full-history --stat -- \"**/${1:-.}\"; }; f"
 	# hg
-	cob = checkout -b
 	ci = commit
 	cia = commit -a
 	addi = add --interactive
