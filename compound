@@ -1033,7 +1033,7 @@
 	emptydrop = "!f() { : ; \
 		if [ "$(git name)" = "master" ]; then echo "Will not squash master" && return 1; fi; : ; \
 		BASE=$(git merge-base $(git name) master); : ; \
-		export GIT_SEQUENCE_EDITOR=\"sed -ire '/empty/s/^pick/drop/'\"; : ; \
+		export GIT_SEQUENCE_EDITOR=\"sed -ire '/# empty$/s/^pick/drop/'\"; : ; \
 		git rebase -i $BASE; : ; \
 	}; f"
 	# backup
