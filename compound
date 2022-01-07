@@ -607,31 +607,43 @@
 		return 0;                                                              : Return zero; \
 	}; f"
 	rebaseto = "!f() { : git man rebaseto; \
-		echo $(git prheader) $(git emph rebaseto);               : Output command header; \
-		if ! git attached; then return 1; fi;                    : Ensure that HEAD is not detached HEAD; \
-		[ $# -ne 1 ] && echo Usage: rebaseto branch && return 1; : Ensure proper number of arguments; \
-		if ! git sref $1; then return 1; fi;                     : Ensure that provided argument is associated with branch; \
-		if ! git stow; then return 1; fi;                        : Call stow alias to temporarily store Workspace; \
-		git rebcombine $1;                                       : Call rebcombine alias to repeatedly merge changesets; \
-		git unstow;                                              : Call unstow alias to restore Workspace to former condition; \
-		return 0;                                                : Return zero; \
+		echo $(git prheader) $(git emph rebaseto);                                        : Output command header; \
+		if ! git attached; then return 1; fi;                                             : Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: rebaseto branch && return 1;                          : Ensure proper number of arguments; \
+		if ! git sref $1; then return 1; fi;                                              : Ensure that provided argument is associated with branch; \
+		if [ "$(git name)" = "$1" ]; then echo "Rebase onto self" && return 2; fi;        : Refuse to rebase onto self; \
+		if git vartrue rebasebackups; then                                                : Check if backups are desired; \
+			cmd=\"backup\";                                                               : Set next command; \
+			echo $(git prinfo) backup $(git prextra $cmd);                                : Output next command; \
+			git $cmd;                                                                     : Execute backup; \
+		fi; \
+		if ! git stow; then return 1; fi;                                                 : Call stow alias to temporarily store Workspace; \
+		git rebcombine $1;                                                                : Call rebcombine alias to repeatedly merge changesets; \
+		git unstow;                                                                       : Call unstow alias to restore Workspace to former condition; \
+		return 0;                                                                         : Return zero; \
 	}; f"
 	rebasefrom = "!f() { : git man rebasefrom; \
-		echo $(git prheader) $(git emph rebasefrom);                  : Output command header; \
-		if ! git attached; then return 1; fi;                         : Ensure that HEAD is not detached HEAD; \
-		[ $# -ne 1 ] && echo Usage: rebasefrom branch && return 1;    : Ensure proper number of arguments; \
-		PREV=$(git ref);                                              : Store ref of HEAD; \
-		if ! git sref $1; then return 1; fi;                          : Ensure that provided argument is associated with branch; \
-		if ! git stow; then return 1; fi;                             : Call stow alias to temporarily store Workspace; \
-		cmd=\"checkout $1\";                                          : Set next command; \
-		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);    : Output next command; \
-		git $cmd;                                                     : Check out source branch; \
-		git rebcombine $PREV;                                         : Call rebcombine alias to repeatedly merge changesets; \
-		cmd=\"checkout $PREV\";                                       : Set next command; \
-		echo $(git prinfo) checkout $PREV branch $(git prextra $cmd); : Output next command; \
-		git $cmd;                                                     : Check out previous HEAD; \
-		git unstow;                                                   : Call unstow alias to restore Workspace to former condition; \
-		return 0;                                                     : Return zero; \
+		echo $(git prheader) $(git emph rebasefrom);                               : Output command header; \
+		if ! git attached; then return 1; fi;                                      : Ensure that HEAD is not detached HEAD; \
+		[ $# -ne 1 ] && echo Usage: rebasefrom branch && return 1;                 : Ensure proper number of arguments; \
+		PREV=$(git ref);                                                           : Store ref of HEAD; \
+		if ! git sref $1; then return 1; fi;                                       : Ensure that provided argument is associated with branch; \
+		if [ "$(git name)" = "$1" ]; then echo "Rebase onto self" && return 2; fi; : Refuse to rebase onto self; \
+		if git vartrue rebasebackups; then                                         : Check if backups are desired; \
+			cmd=\"backup\";                                                        : Set next command; \
+			echo $(git prinfo) backup $(git prextra $cmd);                         : Output next command; \
+			git $cmd;                                                              : Execute backup; \
+		fi; \
+		if ! git stow; then return 1; fi;                                          : Call stow alias to temporarily store Workspace; \
+		cmd=\"checkout $1\";                                                       : Set next command; \
+		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);                 : Output next command; \
+		git $cmd;                                                                  : Check out source branch; \
+		git rebcombine $PREV;                                                      : Call rebcombine alias to repeatedly merge changesets; \
+		cmd=\"checkout $PREV\";                                                    : Set next command; \
+		echo $(git prinfo) checkout $PREV branch $(git prextra $cmd);              : Output next command; \
+		git $cmd;                                                                  : Check out previous HEAD; \
+		git unstow;                                                                : Call unstow alias to restore Workspace to former condition; \
+		return 0;                                                                  : Return zero; \
 	}; f"
 	mergeto = "!f() { : git man mergeto; \
 		echo $(git prheader) $(git emph mergeto);                       : Output command header; \
@@ -997,6 +1009,21 @@
 		echo \"[receive]\" >>$configfile; \
 		echo \"\tdenyNonFastforwards = true\" >>$configfile; \
 		mv ../$name ../$name.git; \
+	}; f"
+	pullmaster = "!f() { : ; \
+		echo $(git prheader) $(git emph pullmaster                        : Output command header; \
+		if ! git stow; then return 1; fi;                                 : Call stow alias to temporarily store Workspace; \
+		cmd=\"co master\";                                                : Set next command; \
+		echo $(git prinfo) switch to master branch $(git prextra $cmd);   : Output next command; \
+		git $cmd;                                                         : Switch to master branch; \
+		cmd=\"pull\";                                                     : Set next command; \
+		echo $(git prinfo) pull into master branch $(git prextra $cmd);   : Output next command; \
+		git $cmd;                                                         : Pull changes on master branch; \
+		cmd=\"co -\";                                                     : Set next command; \
+		echo $(git prinfo) switch to previous branch $(git prextra $cmd); : Output next command; \
+		git $cmd;                                                         : Switch to previous branch; \
+		git unstow;                                                       : Call unstow alias to restore Workspace to former condition; \
+		return 0;                                                         : Return zero; \
 	}; f"
 	# backup
 	backuphelp = "!f() { \

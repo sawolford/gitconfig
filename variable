@@ -3,3 +3,4 @@
     smquiet = false
     smrecursive = true
     python = python
+    rebasebackups = true

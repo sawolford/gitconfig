@@ -42,13 +42,14 @@
 	bru = branch -u
 	brsc = branch --show-current
 	brcontains = branch --contains
-	brupstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
-	hasbranch = show-ref --quiet refs/heads
+	upstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
+	brupstream = "!f() { git upstream | grep -v \"^origin/master$\"; }; f"
+	branchedupstream = "!f() { [ \"$(git upstream)\" != \"origin/master\" ] && echo $(git broot)=$(git brupstream); }; f"
 	# diff
 	di = diff
 	dis = diff --staged
-	dt = difftool -y -d
-	dtd = difftool -y
+	dtt = difftool -y -d
+	dttd = difftool -y
 	dtk = difftool -y -d --tool=kdiff3
 	dtkd = difftool -y --tool=kdiff3
 	dtm = difftool -y -d --tool=meld
@@ -63,10 +64,16 @@
 	dtmsd = difftool -y --tool=meld --staged
 	dtis = difftool -y --tool=icdiff --staged
 	dtvs = difftool -y --tool=vimdiff --staged
+	dii = !git di @{u}..@
+	dio = !git di @..@{u}
+	dtii = !git dti @{u}..@
+	dtio = !git dti @..@{u}
+	dtti = !git dtt @{u}..@
+	dtto = !git dtt @..@{u}
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
-	gm = log --reverse --abbrev-commit --pretty=minimal
+	gm = log --reverse --abbrev-commit --first-parent --pretty=minimal
 	gla = !git gl --all
 	glr = !git gl --all --reflog
 	glv = log --name-status
