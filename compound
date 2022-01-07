@@ -1027,11 +1027,11 @@
 	}; f"
 	cob = "!f() { : ; \
 		if [ $# -lt 1 ]; then echo Usage: git cobempty branchname [options]; fi; : ; \
-		git co -b \"$@\"; : ; \
+		git checkout -b \"$@\"; : ; \
 		git commit --allow-empty -m \"Created branch $1\"; : ; \
 	}; f"
 	emptydrop = "!f() { : ; \
-		if [ "$(git name)" = "master" ]; then echo "Will not squash master" && return 2; fi; : ; \
+		if [ "$(git name)" = "master" ]; then echo "Will not squash master" && return 1; fi; : ; \
 		BASE=$(git merge-base $(git name) master); : ; \
 		export GIT_SEQUENCE_EDITOR=\"sed -ire '/empty/s/^pick/drop/'\"; : ; \
 		git rebase -i $BASE; : ; \
