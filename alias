@@ -31,8 +31,7 @@
 	reco = !git rm -r . && git reset --hard
 	notasciilist = !git mimetype -v us-ascii | sed 's,:.*,,'
 	# branch
-	mergemaster = !git checkout master && git merge HEAD@{1}
-	resetmaster = branch --set-upstream-to=origin/master master
+	resetupstream = "!f() { git branch --set-upstream-to=origin/$(git brname) $(git brname); }; f"
 	blog = log --left-right
 	br = branch
 	bra = branch -a

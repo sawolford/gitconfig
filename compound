@@ -1011,7 +1011,7 @@
 		mv ../$name ../$name.git; \
 	}; f"
 	pullmaster = "!f() { : ; \
-		echo $(git prheader) $(git emph pullmaster                        : Output command header; \
+		echo $(git prheader) $(git emph pullmaster);                      : Output command header; \
 		if ! git stow; then return 1; fi;                                 : Call stow alias to temporarily store Workspace; \
 		cmd=\"co master\";                                                : Set next command; \
 		echo $(git prinfo) switch to master branch $(git prextra $cmd);   : Output next command; \
