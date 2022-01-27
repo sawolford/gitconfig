@@ -1027,6 +1027,7 @@
 	}; f"
 	cob = "!f() { : ; \
 		if [ $# -lt 1 ]; then echo Usage: git cobempty branchname [options]; fi; : ; \
+		git reset; : ; \
 		git checkout -b \"$@\"; : ; \
 		git commit --allow-empty -m \"Created branch $1\"; : ; \
 	}; f"
