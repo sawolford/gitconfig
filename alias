@@ -3,7 +3,7 @@
 	ruser = !git config --local --unset user.name && git config --local --unset user.email
 	hookspath = !git config --local core.hooksPath "~/gitconfig/hooks"
 	# helper
-	empty = !echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904
+	hashempty = !echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904
 	root = !git rev-parse --show-toplevel
 	broot = !git rev-parse --show-toplevel | xargs -0 basename | head -1
 	superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
@@ -86,6 +86,7 @@
 	authorssimple = "!f() { git authorsreverse \"$@\" | awk '!visited[$0]++' | tac; }; f"
 	find = "!f() { git log --all --full-history --stat -- \"**/${1:-.}\"; }; f"
 	# hg
+	cob = checkout -b
 	ci = commit
 	cia = commit -a
 	addi = add --interactive
@@ -120,7 +121,7 @@
 	recommit = !git commit --allow-empty-message -t uncommit.txt
 	recommita = !git commit --allow-empty-message -t uncommit.txt -a
 	grepall = "!f() {  git grep \"$1\" $(git rev-list --all -- \"${2:-.}\") -- \"${2:-.}\"; }; f"
-	cofirst = !git checkout $(git firsthash)
+	firstco = !git checkout $(git firsthash)
 	# push
 	pushuu  = push --set-upstream
 	pushu = !git pushuu origin
@@ -170,3 +171,4 @@
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
+	pullmaster = !git pullbranch master

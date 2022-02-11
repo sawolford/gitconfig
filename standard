@@ -17,3 +17,5 @@
 	default = simple
 [init]
 	defaultBranch = master
+[tar]
+	umask = 0022
