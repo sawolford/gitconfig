@@ -489,7 +489,7 @@
 		git $cmd; rv=$?;                                                 : Call mergetool; \
 		return $rv;                                                      : Return error code; \
 	}; f"
-	combine = "!f() { \
+	rbcombine = "!f() { \
 		git mergetooly;                                               : Call mergetooly alias; \
 		if test -n "$(git status -uno --porcelain)" 2>/dev/null; then : Check there are no local modifications; \
 			cmd=\"rebase --skip\";                                    : Set next command; \
@@ -502,13 +502,34 @@
 		fi;                                                           : Close if statement; \
 		return $rv;                                                   : Return error code; \
 	}; f"
-	rebcombine = "!f() { \
-		[ $# -ne 1 ] && echo Usage: rebcombine branch && return 1; : Ensure proper number of arguments; \
-		cmd=\"rebase $1\";                                         : Set next command; \
-		echo $(git prinfo) rebase $1 $(git prextra $cmd);          : Output next command; \
-		if git $cmd; then return; fi;                              : Call rebase; \
-		while ! git combine; do true; done;                        : Call combine alias repeatedly; \
-		return 0;                                                  : Return zero; \
+	cpcombine = "!f() { \
+		git mergetooly;                                               : Call mergetooly alias; \
+		if test -n "$(git status -uno --porcelain)" 2>/dev/null; then : Check there are no local modifications; \
+			cmd=\"cherry-pick --skip\";                               : Set next command; \
+			echo $(git prinfo) rebase skip $(git prextra $cmd);       : Output next command; \
+			git $cmd; rv=$?;                                          : Skip this rebase step; \
+		else                                                          : Else there are local modifications; \
+			cmd=\"cherry-pick --continue\";                           : Set next command; \
+			echo $(git prinfo) rebase continue $(git prextra $cmd);   : Output next command; \
+			git $cmd; rv=$?;                                          : Continue this rebase; \
+		fi;                                                           : Close if statement; \
+		return $rv;                                                   : Return error code; \
+	}; f"
+	rebasecombine = "!f() { \
+		[ $# -ne 1 ] && echo Usage: rebasecombine branch && return 1; : Ensure proper number of arguments; \
+		cmd=\"rebase $1\";                                            : Set next command; \
+		echo $(git prinfo) rebase $1 $(git prextra $cmd);             : Output next command; \
+		if git $cmd; then return; fi;                                 : Call rebase; \
+		while ! git rbcombine; do true; done;                         : Call rbcombine alias repeatedly; \
+		return 0;                                                     : Return zero; \
+	}; f"
+	cherrypickcombine = "!f() { \
+		[ $# -ne 1 ] && echo Usage: cherrypickcombine branch && return 1; : Ensure proper number of arguments; \
+		cmd=\"cherry-pick $1\";                                           : Set next command; \
+		echo $(git prinfo) rebase $1 $(git prextra $cmd);                 : Output next command; \
+		if git $cmd; then return; fi;                                     : Call rebase; \
+		while ! git cpcombine; do true; done;                             : Call cpcombine alias repeatedly; \
+		return 0;                                                         : Return zero; \
 	}; f"
 	attached = "!f() { \
 		cmd=\"symbolic-ref HEAD\";                                         : Set next command; \
@@ -618,7 +639,7 @@
 			git $cmd;                                                                     : Execute backup; \
 		fi; \
 		if ! git stow; then return 1; fi;                                                 : Call stow alias to temporarily store Workspace; \
-		git rebcombine $1;                                                                : Call rebcombine alias to repeatedly merge changesets; \
+		git rebasecombine $1;                                                                : Call rebcombine alias to repeatedly merge changesets; \
 		git unstow;                                                                       : Call unstow alias to restore Workspace to former condition; \
 		return 0;                                                                         : Return zero; \
 	}; f"
@@ -638,7 +659,7 @@
 		cmd=\"checkout $1\";                                                       : Set next command; \
 		echo $(git prinfo) checkout $1 branch $(git prextra $cmd);                 : Output next command; \
 		git $cmd;                                                                  : Check out source branch; \
-		git rebcombine $PREV;                                                      : Call rebcombine alias to repeatedly merge changesets; \
+		git rebasecombine $PREV;                                                      : Call rebcombine alias to repeatedly merge changesets; \
 		cmd=\"checkout $PREV\";                                                    : Set next command; \
 		echo $(git prinfo) checkout $PREV branch $(git prextra $cmd);              : Output next command; \
 		git $cmd;                                                                  : Check out previous HEAD; \
@@ -740,16 +761,15 @@
 		return 0;                                                                    : Return zero; \
 	}; f"
 	pickfrom = "!f() { : git man pickfrom; \
-		echo $(git prheader) $(git hilite pickfrom);                  : Output command header; \
+		echo $(git prheader) $(git hilite pickfrom);                : Output command header; \
 		[ $# -ne 1 ] && echo Usage: pickfrom revisions && return 1; : Ensure proper number of arguments; \
+		if git vartrue rebasebackups; then                          : Check if backups are desired; \
+			cmd=\"backup\";                                         : Set next command; \
+			echo $(git prinfo) backup $(git prextra $cmd);          : Output next command; \
+			git $cmd;                                               : Execute backup; \
+		fi; \
 		if ! git stow; then return 1; fi;                           : Call stow alias to temporarily store Workspace; \
-		cmd=\"cherry-pick $1\";                                     : Set next command; \
-		echo $(git prinfo) cherry-pick $1 $(git prextra $cmd);      : Output next command; \
-		git $cmd;                                                   : Grab changes from first argument; \
-		git mergetooly;                                             : Merge those changes with current HEAD; \
-		cmd=\"commit\";                                             : Set next command; \
-		echo $(git prinfo) commit $(git prextra $cmd);              : Output next command; \
-		git $cmd;                                                   : Commit merged changeset; \
+		git cherrypickcombine $1;                                   : Call cherrypickcombine alias to repeatedly merge changesets; \
 		git unstow;                                                 : Call unstow alias to restore Workspace to former condition; \
 		return 0;                                                   : Return zero; \
 	}; f"
@@ -1056,7 +1076,7 @@
 		git emptycob $NAME $BASE; : ; \
 		git co _empty; : ; \
 		git rebase $NAME; : ; \
-		git brf template _empty; : ; \
+		git brf $NAME _empty; : ; \
 		git co $NAME; : ; \
 		git brd _empty; : ; \
 	}; f"
