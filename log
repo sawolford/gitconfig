@@ -10,5 +10,6 @@
     tag = blue
     stash = yellow
 [pretty]
-    pretty = format:%C(auto)%h%Creset %C(bold blue)%<(16)%an%C(reset) %C(bold magenta)%<(16)%ch%C(reset) %C(auto)%d%C(reset) %s
+    pretty = tformat:%C(auto)%h%Creset %C(bold blue)%<(16)%an%C(reset) %C(bold magenta)%<(16)%ch%C(reset) %C(auto)%d%C(reset) %s
     minimal = format:%h:%ct:%cD
+    hash = format:%h

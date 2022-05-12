@@ -16,6 +16,15 @@
 	brname = "!f() { git name \"$@\" | grep -v \"^master$\"; }; f"
 	branched = "!f() { [ \"$(git name)\" != \"master\" ] && git broot; }; f"
 	branchedname = "!f() { [ \"$(git name)\" != \"master\" ] && echo $(git broot)=$(git brname); }; f"
+	stcount = "!f() { git stuno --porcelain | wc -l; }; f"
+	stcountgt = "!f() { [ $(git stcount) -gt 0 ]; }; f"
+	stname = "!f() { git stcountgt && git broot; }; f"
+	glocount = "!f() { git glo | wc -l; }; f"
+	glocountgt = "!f() { [ $(git glocount) -gt 0 ]; }; f"
+	gloname = "!f() { git glocountgt && git broot; }; f"
+	glolcount = "!f() { git glol | wc -l; }; f"
+	glolcountgt = "!f() { [ $(git glolcount) -gt 0 ]; }; f"
+	glolname = "!f() { git glolcountgt && git broot; }; f"
 	jsontool = "!f() { $(git varvalue python) -m json.tool \"$@\"; }; f"
 	sh = "!f() { \"$@\"; }; f"
 	varset = "!f() { git config variable.$1 >/dev/null 2>&1; }; f"
@@ -73,6 +82,7 @@
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
 	gm = log --reverse --abbrev-commit --first-parent --pretty=minimal
+	gh = log --reverse --abbrev-commit --first-parent --pretty=hash
 	gla = !git gl --all
 	glr = !git gl --all --reflog
 	glv = log --name-status
@@ -97,11 +107,11 @@
 	outgoing = !git fetch && git log --left-right @{u}..
 	paths = remote -v
 	st = status --short
-	stno = !git st -uno
-	stall = !git st -uall
+	stuno = !git st -uno
+	stuall = !git st -uall
 	stc = "!f() { git st \"$@\" | cut -c 4-; }; f"
-	stnoc = "!f() { git stno \"$@\" | cut -c 4-; }; f"
-	stallc = "!f() { git stall \"$@\" | cut -c 4-; }; f"
+	stunoc = "!f() { git stuno \"$@\" | cut -c 4-; }; f"
+	stuallc = "!f() { git stall \"$@\" | cut -c 4-; }; f"
 	cst = !git -c color.status=always status --short
 	purge = clean -fd
 	purgeall = !git clean -fd $(git root)

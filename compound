@@ -815,6 +815,7 @@
 	deleteremotebranches = "!f() { git branch -rD $(git remotebranches); }; f"
 	deleteremotetags = "!f() { git pushd $(git remotetags); }; f"
 	goshallow = "!f() { \
+		if ! git attached; then return 1; fi;                    						    : Ensure that HEAD is not detached HEAD; \
 		BRANCH=$(git name HEAD);                                                            : Get current branch name; \
 		git config remote.origin.fetch \"+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH\"; : Map only current branch; \
 		git deletelocalbranches;                                                            : Delete local branches; \
@@ -928,18 +929,19 @@
         done; \
 	}; f"
     genclangconfig = !cd $(git root) && git cpfilesfrom $(git superroot) .clang-format=dot-clang-format .clang-tidy=dot-clang-tidy
-    clangformat = "!f() { \
+    clangformathelp = "!f() { \
         pattern=;                                                                         : Match pattern is initially empty; \
         : .m and .mm excluded below; \
         for i in c cc cp cpp c++ cxx hh hpp hxx cu cuh proto protodevel java js ts cs; do : Loop over all supported file extensions; \
             pattern=\"$pattern -e \\.$i$\";                                               : Add extension to pattern matching; \
         done; \
-        files=$(${1:-git diff --name-only --cached} | grep $pattern);                     : Unless argument specified, apply to files in index; \
-        IFS=\"\n\";                                                                       : Use newlines as delimiter; \
-        for i in $files; do                                                               : Loop over all selected files; \
-            clang-format -i $i;                                                           : Apply clang-format; \
-        done; \
+        cat | grep $pattern | while read line; do                                         : Loop over filtered file types; \
+			clang-format -i $line;                                                        : Execute the format; \
+		done; \
     }; f"
+    clangformat = "!f() { git prnl \"$@\" | git clangformathelp; }; f"
+    clangformatall = "!f() { git ls-files | git clangformathelp; }; f"
+    clangformatcached = "!f() { git diff --name-only --cached | git clangformathelp; }; f"
     clangtidy = "!f() { \
         [ $# -lt 1 ] && echo Usage: clangtidy buildpath && return 1   : Ensure proper number of arguments; \
         path=$1;                                                      : Get build path from first argument; \
@@ -1068,6 +1070,7 @@
 	}; f"
 	emptyadd = "!f() { : ; \
 		NAME=$(git name); : ; \
+		UPSTREAM=$(git upstream); : ; \
 		if [ "$NAME" = "master" ]; then return 1; fi; : ; \
 		PARENT=${1:-master}; : ; \
 		BASE=$(git merge-base $NAME $PARENT); : ; \
@@ -1079,6 +1082,7 @@
 		git brf $NAME _empty; : ; \
 		git co $NAME; : ; \
 		git brd _empty; : ; \
+		git branch -u $UPSTREAM $NAME; : ; \
 	}; f"
 	emptysub = "!f() { : ; \
 		if [ "$(git name)" = "master" ]; then echo "Will not squash master" && return 1; fi; : ; \
