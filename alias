@@ -13,9 +13,9 @@
 	remname = "!f() { git name-rev --name-only --refs='remotes/*' --exclude='remotes/*/HEAD' ${1:-HEAD}; }; f"
 	name = "!f() { git rev-parse --abbrev-ref ${1:-HEAD}; }; f"
 	lname = "!f() { git rev-parse ${1:-HEAD}; }; f"
-	brname = "!f() { git name \"$@\" | grep -v \"^master$\"; }; f"
-	branched = "!f() { [ \"$(git name)\" != \"master\" ] && git broot; }; f"
-	branchedname = "!f() { [ \"$(git name)\" != \"master\" ] && echo $(git broot)=$(git brname); }; f"
+	brname = "!f() { git name \"$@\" | grep -v \"^$(git mainmaster)$\"; }; f"
+	branched = "!f() { [ \"$(git name)\" != \"$(git mainmaster)\" ] && git broot; }; f"
+	branchedname = "!f() { [ \"$(git name)\" != \"$(git mainmaster)\" ] && echo $(git broot)=$(git brname); }; f"
 	stcount = "!f() { git stuno --porcelain | wc -l; }; f"
 	stcountgt = "!f() { [ $(git stcount) -gt 0 ]; }; f"
 	stname = "!f() { git stcountgt && git broot; }; f"
@@ -31,6 +31,7 @@
 	varvalue = "!f() { echo $(git config variable.$1); }; f"
 	vartrue = "!f() { $(git config variable.$1); }; f"
 	varfalse = "!f() { ! $(git config variable.$1); }; f"
+	mainmaster = "!f() { git br --format='%(refname:short)' | grep main$ || git br --format='%(refname:short)' | grep master$; }; f"
 	# alias
 	al = "!f() { git config --list | grep alias | sed \"s,;.*,,\"; }; f"
 	alg = "!f() { git al | grep ${1:-.}; }; f"
@@ -51,8 +52,8 @@
 	brsc = branch --show-current
 	brcontains = branch --contains
 	upstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
-	brupstream = "!f() { git upstream | grep -v \"^origin/master$\"; }; f"
-	branchedupstream = "!f() { [ \"$(git upstream)\" != \"origin/master\" ] && echo $(git broot)=$(git brupstream); }; f"
+	brupstream = "!f() { git upstream | grep -v \"^origin/$(git mainmaster)$\"; }; f"
+	branchedupstream = "!f() { [ \"$(git upstream)\" != \"origin/$(git mainmaster)\" ] && echo $(git broot)=$(git brupstream); }; f"
 	# diff
 	di = diff
 	dis = diff --staged
@@ -80,11 +81,23 @@
 	dtto = !git dtt @..@{u}
 	# log
 	logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
+	logv1 = !git logv -n 1
+	logv5 = !git logv -n 5
+	logv10 = !git logv -n 10
 	gl = log --graph --abbrev-commit --left-right --pretty=pretty
+	gl1 = !git gl -n 1
+	gl5 = !git gl -n 5
+	gl10 = !git gl -n 10
 	gm = log --reverse --abbrev-commit --first-parent --pretty=minimal
 	gh = log --reverse --abbrev-commit --first-parent --pretty=hash
 	gla = !git gl --all
+	gla1 = !git gla -n 1
+	gla5 = !git gla -n 5
+	gla10 = !git gla -n 10
 	glr = !git gl --all --reflog
+	glr1 = !git glr -n 1
+	glr5 = !git glr -n 5
+	glr10 = !git glr -n 10
 	glv = log --name-status
 	glva = !git glv --all --reflog
 	glil = !git gl ..@{u}
@@ -119,6 +132,9 @@
 	clg = "!f() { git cl | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
 	schemes = !git showconfig | grep ^url
 	manifest = ls-tree -r --name-only --full-tree HEAD
+	revb = checkout --
+	onsub = smf
+	sst = smg stuno
 	# merge
 	me = merge
 	mt = mergetool -y
@@ -181,4 +197,4 @@
 	# pullrebase
 	rebcont = rebase --continue
 	rebskip = rebase --skip
-	pullmaster = !git pullbranch master
+	pullmain = "!f() { git pullbranch $(git mainmaster); }; f"

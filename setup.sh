@@ -17,8 +17,9 @@ echo "[include]" | tee -a $ofile
 echo "	path = $relpath/all" | tee -a $ofile
 unames=$(uname -s)
 if [[ ${unames} =~ ^Darwin ]]; then platform=macos
-elif [[ $TERM = cygwin ]]; then platform=cmd
+elif [[ $TERM = cygwin ]]; then platform=gitbash
 elif [[ ${unames} =~ ^MINGW ]]; then platform=gitbash
+elif [[ ${unames} =~ ^MSYS ]]; then platform=gitbash
 elif env | grep ^WSL_ >/dev/null; then platform=wsl
 else platform=linux
 fi

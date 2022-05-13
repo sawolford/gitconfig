@@ -33,8 +33,8 @@
 	prnl = "!f() { printf \"%s\\12\" \"$@\"; }; f"
 	# misc
 	headco = "!f() { : ; \
-		if [ \"$(git lname HEAD)\" = \"$(git lname master)\" ]; then : ; \
-			git co master; : ; \
+		if [ \"$(git lname HEAD)\" = \"$(git lname $(git mainmaster))\" ]; then : ; \
+			git co $(git mainmaster); : ; \
 			return 0; : ; \
 		fi; \
 		branch=\"\"; : ; \
@@ -77,7 +77,7 @@
 			git co ${remote#*/};                                      : Checkout local branch corresponding to remote branch; \
 			git branch -u ${remote/  /};                              : Set the upstream for the local branch; \
 		done; \
-		git co master;                                                : Return to master branch; \
+		git co $(git mainmaster);                                     : Return to main branch; \
 		return 0;                                                     : Return zero; \
 	}; f"
 	combinebundles = "!f() { \
@@ -760,6 +760,39 @@
 		git rebaseto $UPSTREAM;                                                      : Call rebaseto alias on upstream branch associated with HEAD; \
 		return 0;                                                                    : Return zero; \
 	}; f"
+	pullstow = "!f() { \
+		echo $(git prheader) $(git hilite pullstow);                                 : Output command header; \
+		if ! git attached; then return 1; fi;                                        : Ensure that HEAD is not detached HEAD; \
+		cmd=\"rev-parse --abbrev-ref @{u}\";                                         : Set next command; \
+		echo $(git prinfo) check for upstream on current branch $(git prextra $cmd); : Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then                                          : Ensure that current branch is associated with upstream branch; \
+			echo $(git prerror current branch has no upstream);                      : Error if current branch is not associated with upstream branch; \
+			return 1;                                                                : Return error code; \
+		fi;                                                                          : Close if statement; \
+		if ! git stow; then return 1; fi;                                            : Call stow alias to temporarily store Workspace; \
+		cmd=\"pull\";                                                                : Set next command; \
+		echo $(git prinfo) fetch $(git prextra $cmd);                                : Output next command; \
+		git $cmd;                                                                    : Pull changesets from origin remote; \
+		git unstow;                                                                  : Call unstow alias to restore Workspace to former condition; \
+		return 0;                                                                    : Return zero; \
+	}; f"
+	pullstash = "!f() { \
+		echo $(git prheader) $(git hilite pullstash);                                 : Output command header; \
+		if ! git attached; then return 1; fi;                                        : Ensure that HEAD is not detached HEAD; \
+		cmd=\"rev-parse --abbrev-ref @{u}\";                                         : Set next command; \
+		echo $(git prinfo) check for upstream on current branch $(git prextra $cmd); : Output next command; \
+		if ! git $cmd >/dev/null 2>&1; then                                          : Ensure that current branch is associated with upstream branch; \
+			echo $(git prerror current branch has no upstream);                      : Error if current branch is not associated with upstream branch; \
+			return 1;                                                                : Return error code; \
+		fi;                                                                          : Close if statement; \
+		if ! git stash; then return 1; fi;                                           : Call stow alias to temporarily store Workspace; \
+		cmd=\"pull\";                                                                : Set next command; \
+		echo $(git prinfo) fetch $(git prextra $cmd);                                : Output next command; \
+		git $cmd;                                                                    : Pull changesets from origin remote; \
+		git stash pop;                                                               : Call unstow alias to restore Workspace to former condition; \
+		git mergetooly;                                                              : Call mergetooly alias; \
+		return 0;                                                                    : Return zero; \
+	}; f"
 	pickfrom = "!f() { : git man pickfrom; \
 		echo $(git prheader) $(git hilite pickfrom);                : Output command header; \
 		[ $# -ne 1 ] && echo Usage: pickfrom revisions && return 1; : Ensure proper number of arguments; \
@@ -798,12 +831,12 @@
 		git pullrebase;                                                  : Call pullrebase alias; \
 		return 0;                                                        : Return zero; \
 	}; f"
-	masterpullrebase = "!f() { : git man masterpullrebase; \
-		echo $(git prheader) $(git hilite masterpullrebase);                   : Output command header; \
-		cmd=\"branchpullrebase master\";                                     : Set next command; \
-		echo $(git prinfo) branch pull rebase on master $(git prextra $cmd); : Output next command; \
-		git $cmd;                                                            : Call branchpullrebase on master; \
-		return 0;                                                            : Return zero; \
+	mainpullrebase = "!f() { : git man mainpullrebase; \
+		echo $(git prheader) $(git hilite mainpullrebase);                              : Output command header; \
+		cmd=\"branchpullrebase $(git mainmaster)\";                                     : Set next command; \
+		echo $(git prinfo) branch pull rebase on $(git mainmaster) $(git prextra $cmd); : Output next command; \
+		git $cmd;                                                                       : Call branchpullrebase on $(git mainmaster); \
+		return 0;                                                                       : Return zero; \
 	}; f"
 	# shallow
 	localbranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/heads/; }; f"
@@ -839,7 +872,7 @@
 			git fetch --unshallow;                                                : Fetch all commits; \
 			BRANCH=$(git name HEAD | sed 's,remotes/origin/,,');                  : Save current branch; \
 			git co \"$BRANCH\";                                                   : Checkout same branch; \
-			git remote set-head origin master;                                    : Set origin/HEAD to master; \
+			git remote set-head origin $(git mainmaster);                         : Set origin/HEAD to main; \
 		fi; \
 	}; f "
 	pulldeep = "!f() { \
@@ -1059,8 +1092,8 @@
 	}; f"
 	emptycheck = "!f() { : ; \
 		NAME=$(git name); : ; \
-		if [ "$NAME" = "master" ]; then return 1; fi; : ; \
-		PARENT=${1:-master}; : ; \
+		if [ "$NAME" = $(git mainmaster) ]; then return 1; fi; : ; \
+		PARENT=${1:-$(git mainmaster)}; : ; \
 		BASE=$(git merge-base $NAME $PARENT); : ; \
 		NEXT=$(git rev-list $PARENT..$NAME | tail -1); : ; \
 		HASH=$(git di $BASE $NEXT | md5sum | cut -c -32); : ; \
@@ -1071,8 +1104,8 @@
 	emptyadd = "!f() { : ; \
 		NAME=$(git name); : ; \
 		UPSTREAM=$(git upstream); : ; \
-		if [ "$NAME" = "master" ]; then return 1; fi; : ; \
-		PARENT=${1:-master}; : ; \
+		if [ "$NAME" = $(git mainmaster) ]; then return 1; fi; : ; \
+		PARENT=${1:-$(git mainmaster)}; : ; \
 		BASE=$(git merge-base $NAME $PARENT); : ; \
 		git cob _empty; : ; \
 		git brd $NAME; : ; \
@@ -1085,8 +1118,8 @@
 		git branch -u $UPSTREAM $NAME; : ; \
 	}; f"
 	emptysub = "!f() { : ; \
-		if [ "$(git name)" = "master" ]; then echo "Will not squash master" && return 1; fi; : ; \
-		PARENT=${1:-master}; : ; \
+		if [ "$(git name)" = $(git mainmaster) ]; then echo "Will not squash $(git mainmaster)" && return 1; fi; : ; \
+		PARENT=${1:-$(git mainmaster)}; : ; \
 		BASE=$(git merge-base $(git name) $PARENT); : ; \
 		export GIT_SEQUENCE_EDITOR=\"sed -ire '/# empty$/s/^pick/drop/'\"; : ; \
 		git rebase -i $BASE; : ; \

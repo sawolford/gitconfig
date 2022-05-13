@@ -3,6 +3,7 @@
 	decorate = short
 	status = auto
 [core]
+	sshCommand = "ssh -q"
 	pager = less
 	autocrlf = false
 	excludesFile = ~/gitconfig/ignore
@@ -16,6 +17,6 @@
 [push]
 	default = simple
 [init]
-	defaultBranch = master
+	defaultBranch = main
 [tar]
 	umask = 0022
