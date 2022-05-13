@@ -789,7 +789,8 @@
 		cmd=\"pull\";                                                                : Set next command; \
 		echo $(git prinfo) fetch $(git prextra $cmd);                                : Output next command; \
 		git $cmd;                                                                    : Pull changesets from origin remote; \
-		git stash pop;                                                               : Call unstow alias to restore Workspace to former condition; \
+		git stash pop;                                                               : Pop stash stack to restore Workspace to former condition; \
+		git stash drop;                                                              : Clear stash entry; \
 		git mergetooly;                                                              : Call mergetooly alias; \
 		return 0;                                                                    : Return zero; \
 	}; f"
