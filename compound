@@ -373,7 +373,7 @@
 			[ $# -eq 2 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\"; true;; esac\"; \
 			[ $# -eq 3 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\"; true;; esac\"; \
 			[ $# -eq 4 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\"; true;; esac\"; \
-			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\";; true; esac\"; \
+			[ $# -eq 5 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\"; true;; esac\"; \
 			[ $# -eq 6 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\"; true;; esac\"; \
 			[ $# -eq 7 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\"; true;; esac\"; \
 			[ $# -eq 8 ] && git smfone \"case \\$name in $filter) git \\\"$1\\\" \\\"$2\\\" \\\"$3\\\" \\\"$4\\\" \\\"$5\\\" \\\"$6\\\" \\\"$7\\\" \\\"$8\\\"; true;; esac\"; \
@@ -851,12 +851,14 @@
 	# shallow
 	localbranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/heads/; }; f"
 	localtags = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/tags/; }; f"
-	deletelocalbranches = "!f() { git branch -D $(git localbranches); }; f"
+	deletelocalbranches = "!f() { git branch -D $(git localbranches | grep -v $(git name)) >/dev/null 2>&1; }; f"
 	deletelocaltags = "!f() { git tag -d $(git localtags); }; f"
 	remotebranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/remotes/; }; f"
 	remotetags = "!f() { git ls-remote --refs --tags ${1:-origin} | sed 's,.*refs/tags/,,'; }; f"
-	deleteremotebranches = "!f() { git branch -rD $(git remotebranches); }; f"
+	deleteremotebranches = "!f() { git branch -rD $(git remotebranches) >/dev/null 2>&1; }; f"
 	deleteremotetags = "!f() { git pushd $(git remotetags); }; f"
+	orphanbranches = "!f() { git for-each-ref --format '%(refname) %(upstream:track)' refs/heads | awk '$2 == \"[gone]\" {sub(\"refs/heads/\", \"\", $1); print $1}'; }; f"
+	deleteorphanbranches = "!f() { git branch -D $(git orphanbranches) >/dev/null 2>&1; }; f"
 	goshallow = "!f() { \
 		if ! git attached; then return 1; fi;                    						    : Ensure that HEAD is not detached HEAD; \
 		BRANCH=$(git name HEAD);                                                            : Get current branch name; \
@@ -882,7 +884,7 @@
 			git fetch --unshallow;                                                : Fetch all commits; \
 			BRANCH=$(git name HEAD | sed 's,remotes/origin/,,');                  : Save current branch; \
 			git co \"$BRANCH\";                                                   : Checkout same branch; \
-			git remote set-head origin $(git mainmaster);                         : Set origin/HEAD to main; \
+			git remote set-head origin \"$BRANCH\";                               : Set origin/HEAD to main; \
 		fi; \
 	}; f "
 	pulldeep = "!f() { \
@@ -894,7 +896,7 @@
 	}; f"
 	pullboth = "!f() { \
 		if git grafted; then git pullshallow; : Pull shallow on shallow clone; \
-		else git pulldeep; fi                 : Pull deep on deep clone;  \
+		else git pulldeep; fi;                : Pull deep on deep clone;  \
 	}; f"
 	# versioning
 	gmversion = "!f() { \
