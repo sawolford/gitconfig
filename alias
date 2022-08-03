@@ -150,7 +150,7 @@
 	firstco = !git checkout $(git firsthash)
 	# push
 	pushuu  = push --set-upstream
-	pushu = !git pushuu origin
+	pushu = "!f() { git pushuu origin ${1:-$(git brname)}; }; f"
 	pushdd = push --delete
 	pushd = !git pushdd origin
 	rea = rebase --abort

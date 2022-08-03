@@ -977,7 +977,7 @@
     clangformathelp = "!f() { \
         pattern=;                                                                         : Match pattern is initially empty; \
         : .m and .mm excluded below; \
-        for i in c cc cp cpp c++ cxx hh hpp hxx cu cuh proto protodevel java js ts cs; do : Loop over all supported file extensions; \
+        for i in c cc cp cpp c++ cxx h hh hpp hxx cu cuh proto protodevel java js ts cs; do : Loop over all supported file extensions; \
             pattern=\"$pattern -e \\.$i$\";                                               : Add extension to pattern matching; \
         done; \
         cat | grep $pattern | while read line; do                                         : Loop over filtered file types; \
@@ -1099,7 +1099,7 @@
 	emptycob = "!f() { : ; \
 		if [ $# -lt 1 ]; then echo Usage: git emptycob branchname [options]; fi; : ; \
 		git reset; : ; \
-		git checkout -b \"$@\"; : ; \
+		git checkout -b \"$@\" || exit 1; : ; \
 		git commit --allow-empty -m \"Created branch $1\"; : ; \
 	}; f"
 	emptycheck = "!f() { : ; \
