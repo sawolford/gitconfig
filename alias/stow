@@ -1,0 +1,122 @@
+[alias]
+    stow = "!f() { \
+        echo $(git prheader) $(git hilite stow);                           : Output command header; \
+        cmd=\"status -s\";                                                 : Set next command; \
+        echo $(git prinfo) check working copy changes $(git prextra $cmd); : Output next command; \
+        [ -z \"$(git $cmd)\" ] && return 0;                                : Check to see if there are local changes; \
+        if ! git attached; then return 1; fi;                              : Ensure that HEAD is not detached HEAD; \
+        PREV=$(git ref);                                                   : Store ref of HEAD; \
+        if ! git stowbranch; then return 1; fi;                            : Ensure that nothing is already stowed and checks out temporary _stow branch; \
+        cmd=\"add -A\";                                                    : Set next command; \
+        echo $(git prinfo) add working copy changes $(git prextra $cmd);   : Output next command; \
+        git $cmd >/dev/null 2>&1;                                          : Add all local changes to Index; \
+        cmd=\"commit --no-verify -m stow\";                                : Set next command; \
+        echo $(git prinfo) commit stow branch $(git prextra $cmd);         : Output next command; \
+        git $cmd >/dev/null 2>&1;                                          : Commit Index, ignoring pre-commit checks; \
+        cmd=\"checkout $PREV\";                                            : Set next command; \
+        echo $(git prinfo) checkout $PREV $(git prextra $cmd);             : Output next command; \
+        git $cmd >/dev/null 2>&1;                                          : Check out previous HEAD; \
+        return 0;                                                          : Return zero; \
+    }; f"
+    stowbranch = "!f() { \
+        cmd=\"checkout -b _stow\";                                   : Set next command; \
+        echo $(git prinfo) checkout stow branch $(git prextra $cmd); : Output next command; \
+        if ! git $cmd >/dev/null 2>&1; then                          : Checkout stow branch; \
+            echo $(git prerror already stowed);                      : Output error that already stowed; \
+            return 1;                                                : Return one; \
+        fi;                                                          : Close if statement; \
+        return 0;                                                    : Return zero; \
+    }; f"
+    stowcheck = "!f() { \
+        if [ -n \"$(git status -s)\" ]; then              : Check if there are local modifications; \
+            echo $(git prerror have local modifications); : Error if there are local modifications; \
+            return 1;                                     : Return one; \
+        fi;                                               : Close if statement; \
+        return 0;                                         : Return zero; \
+    }; f"
+    unstow = "!f() { \
+        echo $(git prheader) $(git hilite unstow);                                   : Output command header; \
+        cmd=\"cherry-pick -n _stow\";                                                : Set next command; \
+        echo $(git prinfo) cherry-pick changes from stow branch $(git prextra $cmd); : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                    : Grab changes made by previous stow command; \
+        git mergetooly;                                                              : Merge those changes with current HEAD; \
+        cmd=\"reset --mixed\";                                                       : Set next command; \
+        echo $(git prinfo) reset index to working copy $(git prextra $cmd);          : Output next command; \
+        git $cmd;                                                                    : Reset changes back into Workspace; \
+        cmd=\"branch -D _stow\";                                                     : Set next command; \
+        echo $(git prinfo) delete stow branch $(git prextra $cmd);                   : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                    : Delete temporary _stow branch; \
+        return 0;                                                                    : Return zero; \
+    }; f"
+    stowco = "!f() { \
+        echo $(git prheader) $(git hilite stowco);                 : Output command header; \
+        [ $# -ne 1 ] && echo Usage: stowco branch && return 1;     : Ensure proper number of arguments; \
+        if ! git stow; then return 1; fi;                          : Call stow alias to temporarily store Workspace; \
+        cmd=\"checkout $1\";                                       : Set next command; \
+        echo $(git prinfo) checkout $1 branch $(git prextra $cmd); : Output next command; \
+        git $cmd;                                                  : Check out target branch; \
+        git unstow;                                                : Call unstow alias to restore Workspace to former condition; \
+        return 0;                                                  : Return zero; \
+    }; f"
+    stowreco = "!f() { \
+        echo $(git prheader) $(git hilite stowco);          : Output command header; \
+        if ! git stow; then return 1; fi;                   : Call stow alias to temporarily store Workspace; \
+        cmd=\"reco\";                                       : Set next command; \
+        echo $(git prinfo) re-checkout $(git prextra $cmd); : Output next command; \
+        git $cmd;                                           : Check out target branch; \
+        git unstow;                                         : Call unstow alias to restore Workspace to former condition; \
+        return 0;                                           : Return zero; \
+    }; f"
+    stowcob = "!f() { \
+        echo $(git prheader) $(git hilite stowcob);                            : Output command header; \
+        [ $# -ne 2 ] && echo Usage: stowco branch tracking && return 1;        : Ensure proper number of arguments; \
+        if ! git stow; then return 1; fi;                                      : Call stow alias to temporarily store Workspace; \
+        cmd=\"checkout -b $1 $2\";                                             : Set next command; \
+        echo $(git prinfo) checkout $1 branch tracking $2 $(git prextra $cmd); : Output next command; \
+        git $cmd;                                                              : Check out target branch with proper tracking branch; \
+        git unstow;                                                            : Call unstow alias to restore Workspace to former condition; \
+        return 0;                                                              : Return zero; \
+    }; f"
+    pullstow = "!f() { \
+        echo $(git prheader) $(git hilite pullstow);                                 : Output command header; \
+        if ! git attached; then return 1; fi;                                        : Ensure that HEAD is not detached HEAD; \
+        cmd=\"rev-parse --abbrev-ref @{u}\";                                         : Set next command; \
+        echo $(git prinfo) check for upstream on current branch $(git prextra $cmd); : Output next command; \
+        if ! git $cmd >/dev/null 2>&1; then                                          : Ensure that current branch is associated with upstream branch; \
+            echo $(git prerror current branch has no upstream);                      : Error if current branch is not associated with upstream branch; \
+            return 1;                                                                : Return error code; \
+        fi;                                                                          : Close if statement; \
+        if ! git stow; then return 1; fi;                                            : Call stow alias to temporarily store Workspace; \
+        cmd=\"pull\";                                                                : Set next command; \
+        echo $(git prinfo) pull $(git prextra $cmd);                                 : Output next command; \
+        git $cmd;                                                                    : Pull changesets from origin remote; \
+        git unstow;                                                                  : Call unstow alias to restore Workspace to former condition; \
+        return 0;                                                                    : Return zero; \
+    }; f"
+    pullstash = "!f() { \
+        echo $(git prheader) $(git hilite pullstash);                       : Output command header; \
+        STASHED=0;                                                          : Default to off; \
+        cmd=\"status -s\";                                                  : Set next command; \
+        echo $(git prinfo) check working copy changes $(git prextra $cmd);  : Output next command; \
+        if [ -n \"$(git $cmd)\" ]; then                                     : Check to see if there are local changes; \
+            cmd=\"stash push -a\";                                          : Set next command; \
+            echo $(git prinfo) stash working copy $(git prextra $cmd);      : Output next command; \
+            if ! git $cmd; then return 1; fi;                               : Call stash to temporarily store Workspace; \
+            STASHED=1;                                                      : Mark as stashed; \
+        fi; \
+        cmd=\"pull\";                                                       : Set next command; \
+        echo $(git prinfo) pull $(git prextra $cmd);                        : Output next command; \
+        git $cmd;                                                           : Pull changesets from origin remote; \
+        if [ $STASHED -eq 0 ]; then return 0; fi;                           : Return early if nothing stashed; \
+        cmd=\"stash show -p | git apply -3\";                               : Set next command; \
+        echo $(git prinfo) apply stash changeset $(git prextra $cmd);       : Output next command; \
+        eval git $cmd;                                                      : Pull changesets from origin remote; \
+        git mergetooly;                                                     : Call mergetooly alias; \
+        cmd=\"stash drop\";                                                 : Set next command; \
+        echo $(git prinfo) drop unstashed stash $(git prextra $cmd);        : Output next command; \
+        git $cmd;                                                           : Pull changesets from origin remote; \
+        cmd=\"reset --mixed\";                                              : Set next command; \
+        echo $(git prinfo) reset index to working copy $(git prextra $cmd); : Output next command; \
+        git $cmd;                                                           : Reset changes back into Workspace; \
+        return 0;                                                           : Return zero; \
+    }; f"

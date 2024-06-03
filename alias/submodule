@@ -1,0 +1,124 @@
+[alias]
+    addsubmodules = !git lssubmodules0 | xargs -0 git add
+    catsubmodules = config -f .gitmodules -l
+    disubmodules = "!f() { \
+        for i in $(git lssubmodules); do \
+            for j in $(git diff --cached --name-only); do \
+                [[ $i = $j ]] && { echo "Submodule \\'$i\\' is staged so cannot diff."; exit 1; }; \
+            done; \
+        done; \
+        git addsubmodules; \
+        git diff --submodule=diff; \
+        git unaddsubmodules; \
+        return 0; \
+    }; f"
+    disubmodulestrans = "!f() { \
+        [ $# -ne 1 ] && echo Usage: ditrans path && return 1; : Ensure proper number of arguments; \
+        [ -e $1/.gitmodules ] || echo "ditrans: No .gitmodules at \\'$1\\'"; \
+        git disubmodules | (cd $1 && git apply -); \
+    }; f"
+    lssubmodules = !git ls-files --stage | grep 160000 | cut -c 51-
+    lssubmodules0 = !git lssubmodules | git nl2nul
+    sm = submodule
+    smflags = !git vartrue smquiet && echo --quiet
+    smforeachflags = !git vartrue smrecursive && echo --recursive
+    smupdate = !git sm update --init
+    smshallow = !git smupdate --depth 1
+    qsmf = !git -c variable.smquiet=true smf
+    qsmfa = !git -c variable.smquiet=true smfa
+    qsmg = !git -c variable.smquiet=true smg
+    qsmga = !git -c variable.smquiet=true smga
+    rmsubmodules = "!f() { \
+        [ $# -lt 1 ] && echo Usage: rmsubmodules submodule ... && return;            : Ensure proper number of arguments; \
+        IFS=\"\n\";                                                                  : Use newline as separator; \
+        for i in \"$@\"; do                                                          : Iterate over all arguments; \
+            for j in $(git lssubmodules); do                                         : Iterate over all submodules; \
+                if [ \"$i\" = \"$j\" ]; then                                         : If argument matches a submodule; \
+                    git config --file=.gitmodules --remove-section submodule.\"$i\"; : Remove reference from .gitmodules; \
+                fi; \
+            done; \
+        done; \
+        git add .gitmodules;                                                         : Stage .gitmodules; \
+        for i in \"$@\"; do                                                          : Iterate over all arguments; \
+            for j in $(git lssubmodules); do                                         : Iterate over all submodules; \
+                if [ \"$i\" = \"$j\" ]; then                                         : If argument matches a submodule; \
+                    git config --local --remove-section submodule.\"$i\";            : Remove reference from .git/config; \
+                    git rm --cached \"$i\";                                          : Remove reference from working copy; \
+                    rm -rf .git/modules/\"$i\";                                      : Remove submodule .git folder; \
+                    rm -rf \"$i\";                                                   : Remove submodule; \
+                fi; \
+            done; \
+        done; \
+    }; f"
+    unaddsubmodules = !git lssubmodules0 | xargs -0 git reset --
+    smf = "!f() { \
+        [ $# -lt 1 ] && echo Usage: smf command && return;                   : Ensure proper number of arguments; \
+        ([ -p /dev/stdin ] && cat || git lssubmodules) | while read line; do : Iterate over submodules; \
+            [ -d \"$line\" ] || continue;                                    : Check if folder exists; \
+            cd \"$line\";                                                    : Change current directory to folder; \
+            git vartrue smquiet || echo "Entering \\'$line\\'";              : Output status message, if desired; \
+            eval \"$@\";                                                     : Execute command; \
+            cd - >/dev/null;                                                 : Change current directory back; \
+        done; \
+    }; f"
+    smfa = "!f() { \
+        [ $# -lt 1 ] && echo Usage: smfa command && return; : Ensure proper number of arguments; \
+        (git lssubmodules; echo .) | git smf \"$@\";        : Iterate over submodules and current folder; \
+    }; f"
+    smg = "!f() { \
+        [ $# -lt 1 ] && echo Usage: smg command && return; : Ensure proper number of arguments; \
+        git vartrue smquiet && verbose= || verbose=-t;     : Construct verbosity argument; \
+        : Iterate over submodules and execute a git command in that submodule; \
+        ([ -p /dev/stdin ] && cat || git lssubmodules) | xargs $verbose -I {} git -C {} \"$@\"; \
+    }; f"
+    smga = "!f() { \
+        [ $# -lt 1 ] && echo Usage: smga command && return; : Ensure proper number of arguments; \
+        (git lssubmodules; echo .) | git smg \"$@\";        : Iterate over submodules and current folder; \
+    }; f"
+    psmf = "!f() { \
+        [ $# -lt 1 ] && echo Usage: psmf command && return; : Ensure proper number of arguments; \
+        : Iterate over submodules and execute a command in each submodule in parallel; \
+        ([ -p /dev/stdin ] && cat || git lssubmodules) | \
+            xargs -P $(git lssubmodules | wc -l) -I {} find {} -name .git -maxdepth 1 -execdir \"$@\" \\;; \
+    }; f"
+    psmfa = "!f() { \
+        [ $# -lt 1 ] && echo Usage: psmfa command && return; : Ensure proper number of arguments; \
+        (git lssubmodules; echo .) | git psmf \"$@\";        : Iterate over submodules; \
+    }; f"
+    psmg = "!f() { \
+        [ $# -lt 1 ] && echo Usage: psmg command && return; : Ensure proper number of arguments; \
+        : Iterate over submodules and execute a git command in that submodule in parallel; \
+        ([ -p /dev/stdin ] && cat || git lssubmodules) | \
+            xargs -P $(git lssubmodules | wc -l) -I {} git -C {} \"$@\"; \
+    }; f"
+    psmga = "!f() { \
+        [ $# -lt 1 ] && echo Usage: psmga command && return; : Ensure proper number of arguments; \
+        (git lssubmodules; echo .) | git psmg \"$@\";        : Iterate over submodules; \
+    }; f"
+    fsmf = "!f() { \
+        [ $# -lt 2 ] && echo Usage: fismf filter command && return; : Ensure proper number of arguments; \
+        filter=$(eval \"$1\");                                      : Get output of filter; \
+        shift;                                                      : Drop filter from remaining arguments; \
+        printf \"%s\n\" $filter | git smf \"$@\";                   : Iterate over filtered submodules; \
+    }; f"
+    fsmg = "!f() { \
+        [ $# -lt 2 ] && echo Usage: fismg filter command && return; : Ensure proper number of arguments; \
+        filter=$(eval \"$1\");                                      : Get output of filter; \
+        shift;                                                      : Drop filter from remaining arguments; \
+        printf \"%s\n\" $filter | git smg \"$@\";                   : Iterate over filtered submodules; \
+    }; f"
+    outcountpath = "!f() { \
+        [ $# -lt 1 ] && echo Usage: outcountpath command && return;      : Ensure proper number of arguments; \
+        if git outcountgt \"$@\"; then                                   : If there is output; \
+            root=$(git root);                                            : Get root of folder; \
+            echo $root | sed "s,$(git superroot),./," | xargs basename;  : Substitute for superroot; \
+        fi; \
+    }; f"
+    osmg = "!f() { \
+        [ $# -lt 1 ] && echo Usage: osmg command && return; : Ensure proper number of arguments; \
+        git psmg outcountpath \"$@\" | git smg \"$@\";       : Iterate over submodules with output; \
+    }; f"
+    osmga = "!f() { \
+        [ $# -lt 1 ] && echo Usage: osmg command && return; : Ensure proper number of arguments; \
+        git psmga outcountpath \"$@\" | git smg \"$@\";      : Iterate over submodules with output; \
+    }; f"
