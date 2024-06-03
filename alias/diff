@@ -1,0 +1,67 @@
+[alias]
+    di = diff
+    dis = diff --staged
+    dtk = difftool -y -d --tool=kdiff3
+    dtkd = difftool -y --tool=kdiff3
+    dtm = difftool -y -d --tool=meld
+    dtmd = difftool -y --tool=meld
+    dta = difftool -y -d --tool=araxis
+    dtad = difftool -y --tool=araxis
+    dtb = difftool -y -d --tool=bc
+    dtbd = difftool -y --tool=bc
+    dtc = difftool -y --tool=vscode # -d doesn't work well w/ vscode
+    dtcd = difftool -y --tool=vscode
+    dtt = difftool -y --tool=tkdiff # -d doesn't work well w/ tkdiff
+    dttd = difftool -y --tool=tkdiff
+    dti = difftool -y --tool=icdiff
+    dtv = difftool -y --tool=vimdiff
+    dts = difftool -y -d --staged
+    dtsd = difftool -y --staged
+    dtks = difftool -y -d --tool=kdiff3 --staged
+    dtksd = difftool -y --tool=kdiff3 --staged
+    dtms = difftool -y -d --tool=meld --staged
+    dtmsd = difftool -y --tool=meld --staged
+    dtas = difftool -y -d --tool=araxis --staged
+    dtasd = difftool -y --tool=araxis --staged
+    dtbs = difftool -y -d --tool=bc --staged
+    dtbsd = difftool -y -d --tool=bc --staged
+    dtcs = difftool -y -d --tool=vscode --staged
+    dtcsd = difftool -y -d --tool=vscode --staged
+    dtis = difftool -y --tool=icdiff --staged
+    dtvs = difftool -y --tool=vimdiff --staged
+    dii = !git di @{u}..@
+    dio = !git di @..@{u}
+    dtii = !git dti @{u}..@
+    dtio = !git dti @..@{u}
+    dtti = !git dtt @{u}..@
+    dtto = !git dtt @..@{u}
+    dir = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git di ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dt ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtkr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtk -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtmr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtm -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtir = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dti ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtvr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtv ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    ditrans = "!f() { \
+        [ $# -ne 1 ] && echo Usage: ditrans path && return 1; : Ensure proper number of arguments; \
+        path=$1; shift; \
+        [ -e $path/.git ] || echo ditrans: No .git at $path.; \
+        git di | (cd $path && git apply -); \
+    }; f"
