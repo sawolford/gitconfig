@@ -1,0 +1,128 @@
+[alias]
+    al = "!f() { git config --list | grep alias | sed \"s,;.*,,\"; }; f"
+    alg = "!f() { git al | grep ${1:-.}; }; f"
+    br = branch
+    bra = branch -a
+    brd = branch -D
+    brf = branch -f
+    brm = branch -m
+    brpath = "!f() { [ \"$(git name)\" != \"${1:-$(git mainmaster)}\" ] && git broot; }; f"
+    brpathname = "!f() { [ \"$(git name)\" != \"${1:-$(git mainmaster)}\" ] && echo $(git broot)=$(git brname); }; f"
+    brname = "!f() { git name \"$@\" | grep -v \"^${1:-$(git mainmaster)}$\"; }; f"
+    broot = !git root | sed "s?$(git superroot)?.?"
+    bru = branch -u
+    bundlefetch = "!f() { \
+        [ $# -lt 1 ] && { echo Usage: bundlefetch filename [remote] && return 1; };                  : Ensure proper number of arguments; \
+        infile=$1; remote=${2:-origin};                                                              : Grab arguments; \
+        git remote get-url $remote >/dev/null 2>&1 || { echo No remote \\\"$remote\\\"; return 2; }; : Make sure requested remote exists; \
+        git remote add $infile $infile;                                                              : Add bundle as remote; \
+        git fetch $infile;                                                                           : Fetch from temporary remote; \
+        mkdir -p .git/refs/remotes/$remote;                                                          : Make sure path for remote exists; \
+        mv .git/refs/remotes/$infile/* .git/refs/remotes/$remote;                                    : Change remote of branches; \
+        git remote remove $infile;                                                                   : Remove temporary remote; \
+        return 0;                                                                                    : Return zero; \
+    }; f"
+    catf = "!f() { git cat-file commit ${1:-HEAD}; }; f"
+    cdapply = "!f() { \
+        [ $# -ne 1 ] && echo Usage: cdapply path && return; : Ensure proper number of arguments; \
+        git cmdapply \"$1\";                                : Pass cd command along; \
+    }; f"
+    ci = commit
+    cia = commit -a
+    cl = config --list --show-origin
+    cleanup = reflog expire --expire=now --all
+    clg = "!f() { git cl | grep ${1:-.} | sed \"s,;.*,,\"; }; f"
+    cmdapply = "!f() { \
+        [ $# -ne 1 ] && echo Usage: cmdapply command && return; : Ensure proper number of arguments; \
+        \"$1\";                                                 : Apply command; \
+        git apply; \
+    }; f"
+    co = checkout
+    cob = checkout -b
+    sw = switch
+    configtype = "!f() { \
+        git ingitbash && echo git-bash; \
+        git ingitcmd && echo cmd; \
+        git ingitwindows && echo windows; \
+        git ingitwindows || echo unix; \
+    }; f"
+    countsame = "!f() { sort | uniq -c | sort -r | paste -s -d , -; }; f"
+    echo = "!f() { \
+        while [ $# -gt 0 ]; do \
+            echo $1; \
+            shift; \
+        done; \
+    }; f"
+    expireall = reflog expire --expire=now --expire-unreachable=now --all
+    expand = "!f() { git ls-files | while read line; do cat \"$line\" | expand \"$@\" | git sponge \"$line\"; done; }; f"
+    fetchd = "!f() { git fetch --no-tags --depth ${1:-1}; }; f"
+    findall = "!f() { git log --all --full-history --stat -- \"${1:-.}\"; }; f"
+    firstco = !git checkout $(git firsthash)
+    firsthash = !git rev-list --abbrev-commit HEAD | tail -n 1
+    gcprune = gc --prune=now
+    grepall = "!f() { \
+        pattern=${1:-.}; shift; \
+        ([ -p /dev/stdin ] && cat || git rev-list --all -- \"${@:-.}\") | xargs -I {} git grep \"$pattern\" {} -- \"${@:-.}\" | git pager; \
+    }; f"
+    hashempty = !echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904
+    hashes = "!f() { echo $(git log --oneline ${1:-HEAD} --pretty=format:\"%h\"); }; f"
+    haveman = !which man >/dev/null 2>&1
+    havepandoc = !which pandoc >/dev/null 2>&1
+    head = !less +gq
+    ingitbash = !uname -s | grep ^MINGW >/dev/null
+    ingitcmd = !uname -s | grep ^MSYS >/dev/null
+    ingitwindows = "!f() { if git ingitbash || git ingitcmd; then return 0; else return 1; fi; }; f"
+    jsontool = "!f() { $(git varvalue python) -m json.tool \"$@\"; }; f"
+    lname = "!f() { git rev-parse --revs-only ${1:-HEAD}; }; f"
+    lsca = "!f() { git ls-files | git check-attr --stdin ${1:-text}; }; f"
+    mainmaster = "!f() { git br --format='%(refname:short)' | grep ^main$ || git br --format='%(refname:short)' | grep ^master$; }; f"
+    mergeq = merge -q
+    name = "!f() { git rev-parse --abbrev-ref ${1:-HEAD}; }; f"
+    nearbase = "!f() { git merge-base $(git name ${1:-$(git name)}) ${2:-$(git mainmaster)}; }; f"
+    out = "!f() { \
+        [ $# -lt 1 ] && echo Usage: out command && return; : Ensure proper number of arguments; \
+        eval \"$@\";                                       : Execute command; \
+    }; f"
+    outcount = "!f() { git out \"$@\" 2>&1 | git wcl1; }; f"
+    outcountgt = "!f() { [ $(git outcount \"$@\") -gt 0 ]; }; f"
+    pager = "!f() { ${GIT_PAGER:-$(git config --default=cat core.pager)}; }; f"
+    pushdot = "!f() { git push . :${1:-.}; }; f"
+    pushu = "!f() { git pushuu origin ${1:-$(git brname)}; }; f"
+    pushuu  = push --set-upstream
+    pushd = !git pushdd origin
+    pushdd = push --delete
+    rbranch = reset --hard @{u}
+    ref = "!f() { git symbolic-ref HEAD | cut -d/ -f3-; }; f"
+    remotehost = "!f() { git remoteurl \"$@\" | sed 's,https://,,' | sed 's,:.*,,' | sed 's,/.*,,'; }; f"
+    remotepath = "!f() { git remoteurl \"$@\" | sed -E \"s,.*:(//[^/]*/)?,,\" | sed \"s,\\.git,,\"; }; f"
+    remoteurl = "!f() { git remote get-url ${1:-origin}; }; f"
+    resetupstream = "!f() { git branch --set-upstream-to=${1:-origin}/$(git brname) $(git brname); }; f"
+    rhard = reset --hard
+    rmixed = reset --mixed
+    root = !git rev-parse --show-toplevel
+    rsoft = reset --soft
+    ruser = !git config --local --unset user.name && git config --local --unset user.email
+    sh = "!f() { \"$@\"; }; f"
+    slashsuperroot = "!f() { if git ingitbash; then git superroot | sed \"s,\\(.\\):/,/\\L\\1/,\"; else git superroot; fi; }; f"
+    sponge = "!f() { file=$(mktemp); cat >$file; [ -s $file ] && cat $file >${1:-/dev/stdout}; rm -f $file; }; f"
+    stcount = "!f() { git stuno --porcelain | git wcl0; }; f"
+    stcountgt = "!f() { [ $(git stcount) -gt 0 ]; }; f"
+    stpath = "!f() { git stcountgt && git broot; }; f"
+    st = status --short
+    stuno = !git st -uno
+    stuall = !git st -uall
+    stc = "!f() { git st \"$@\" | cut -c 4-; }; f"
+    stunoc = "!f() { git stuno \"$@\" | cut -c 4-; }; f"
+    stuallc = "!f() { git stall \"$@\" | cut -c 4-; }; f"
+    superroot = !git rev-parse --absolute-git-dir | sed 's,/.git.*,,'
+    tail = !less +Gq
+    unexpand = "!f() { git ls-files | while read line; do cat \"$line\" | unexpand \"$@\" | git sponge \"$line\"; done; }; f"
+    upstream = "!f() { git rev-parse --abbrev-ref ${1:-}@{u}; }; f"
+    urldecode = "!f() { $(git varvalue python) -c \"import urllib.parse; print(urllib.parse.unquote_plus(\\\"$1\\\"))\"; }; f"
+    urlencode = "!f() { $(git varvalue python) -c \"import urllib.parse; print(urllib.parse.quote_plus(\\\"$1\\\"))\"; }; f"
+    varfalse = "!f() { ! $(git config variable.$1); }; f"
+    varset = "!f() { git config variable.$1 >/dev/null 2>&1; }; f"
+    vartrue = "!f() { $(git config variable.$1); }; f"
+    varvalue = "!f() { echo $(git config variable.$1); }; f"
+    wcl0 = "!f() { wc -l; }; f"
+    wcl1 = "!f() { awk 1 | git wcl0; }; f"

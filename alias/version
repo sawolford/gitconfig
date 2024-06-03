@@ -1,0 +1,54 @@
+[alias]
+    gmprefixes = "!f() { \
+        if [ -d \"$(git root)/.git/modules\" ]; then                          : If a superproject; \
+            git -c variable.smquiet=true smga gmprefix | git gmglobal \"$@\"; : Execute recursive gm* query commands; \
+        else                                                                  : Else regular ; \
+            git gmprefix | git gmglobal \"$@\";                               : Execute regular gm* query commands; \
+        fi; \
+    }; f"
+    gmversion = "!f() { \
+        if [ $# -gt 0 ]; then max=$1; shift; fi;        : Get maximum revision if provided; \
+        [ ${max}x = .x ] && unset max;                  : If first argument is ., assume maximum version; \
+        git gmprefixes \"$@\" | git gmmaximum ${max:-}; : Execute recursive gm* query commands; \
+    }; f"
+    gmprefix = "!f() { \
+        broot=$(git broot);                : Get toplevel folder name; \
+        git gm | nl -s \":      $broot:\"; : Output log with toplevel folder name in prefix; \
+        printf \"\n\";                     : Output final newline; \
+    }; f"
+    gmglobal = "!f() { \
+        root=$(git broot);                                                       : Get toplevel folder name; \
+        cat \"$@\" - | sed \"s,$root:,.:,\" | sort -n -t : -k 4 | uniq | nl -s:; : Replace toplevel folder name and sort chronologically; \
+    }; f"
+    gmmaximum = "!f() { \
+        file=$(mktemp);                                          : Get temporary file; \
+        grep -Ev \"^[[:space:]]*$\" > $file;                     : Write to temporary file; \
+        nfile=$(cat $file | wc -l);                              : Find the maximum global version number; \
+        number=${1:-$nfile};                                     : Use argument passed in or maximum global version number; \
+        IFS=\"\n\";                                              : Use newline as separator; \
+        (for i in $(cat $file | cut -f 3 -d : | sort | uniq); do : Iterate over all submodules; \
+            head -n $number $file | grep -E \":$i:\" | tail -1;  : Find the highest global version number for a submodule; \
+        done) | sort -n -t : -k 1;                               : Sort by global version number; \
+        rm -f $file;                                             : Cleanup temporary file; \
+    }; f"
+    gmcheckout = "!f() { \
+        file=$(mktemp);                                                             : Get temporary file; \
+        cat > $file;                                                                : Write to temporary file; \
+        if cat $file | grep -F .: >/dev/null; then                                  : If hash exists in input stream; \
+            hash=$(cat $file | grep -F .: | cut -d : -f 4);                         : Get the hash; \
+            git co $hash;                                                           : And check it out; \
+        else \
+            git firstco;                                                            : Otherwise, check out the first hash; \
+        fi; \
+        git smupdate;                                                               : Update all submodules for the current changeset; \
+        IFS=\"\n\";                                                                 : Use newline as separator; \
+        for i in $(git lssubmodules); do                                            : Iterate over all submodules; \
+            if cat $file | grep -E \":[[:space:]]+./$i:\" >/dev/null; then          : If hash exists in input stream; \
+                hash=$(cat $file | grep -E \":[[:space:]]+./$i:\" | cut -d : -f 4); : Get the hash; \
+                (cd $i && git checkout $hash);                                      : And check it out; \
+            else \
+                (cd $i && git firstco);                                             : Otherwise, check out the first hash; \
+            fi; \
+        done; \
+        rm -f $file;                                                                : Cleanup temporary file; \
+    }; f"

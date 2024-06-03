@@ -1,0 +1,59 @@
+[alias]
+    reswitch = "!f() { \
+        if ! git rev-parse --abbrev-ref @{u} >/dev/null 2>&1; then \
+            echo "No upstream for branch \\'$(git name)\\'"; \
+            return 1; \
+        fi; \
+        if [ -n \"$(git status -s)\" ]; then \
+            echo "Local changes so cannot reswitch branch \\'$(git name)\\'"; \
+            return 1; \
+        fi; \
+        git reset --hard @{u}; \
+    }; f"
+    swbranch = "!f() { \
+        for i in \"$@\"; do \
+            echo $i | grep / >/dev/null 2>&1 || { echo "cobranch: branch \\'$i\\' is not remote branch name"; return 1; }; \
+        done; \
+        flag=''; c=1; for a in \"$@\"; do set -- \"$a\" ${flag-\"$@\"}; unset flag; done; \
+        for rem in \"$@\"; do \
+            loc=$(basename $rem); \
+            if [ -n \"$(git lname $rem)\" ]; then \
+                if [ -n \"$(git lname $loc)\" ]; then \
+                    if [ $(git upstream $loc) != $rem ]; then \
+                        echo "cobranch: local branch \\'$loc\\' upstream does not match \\'$rem\\'"; \
+                        return 0; \
+                    fi; \
+                fi; \
+                git co $loc --; \
+                return 0; \
+            fi; \
+        done; \
+        return 1; \
+    }; f"
+    swhead = "!f() { \
+        git codetach; \
+        git cobranch \"$@\" && return 0; \
+        head=$(git lname $loc); \
+        lbranches=$(git branch -l --format='%(refname:short)' | grep -v \"HEAD detached at\"); \
+        rbranches=$(git branch -r --format='%(refname:short)' | grep -v origin/HEAD); \
+        branch=\"\"; \
+        for loc in $lbranches; do \
+            [ $head = $(git lname $loc) ] || continue; \
+            if [ ! -z \"$branch\" ]; then \
+                >&2 echo "cohead: HEAD could be on \\'$branch\\' or \\'$loc\\'".; \
+                return 1; \
+            fi; \
+            branch=\"$loc\"; \
+        done; \
+        for rem in $rbranches; do \
+            [ $head = $(git lname $rem) ] || continue; \
+            if [ ! -z \"$branch\" ]; then \
+                git upstream $branch >/dev/null 2>&1 && [ $(git upstream $branch) == $rem ] && continue; \
+                >&2 echo "cohead: HEAD could be on \\'$branch\\\" or \\\"$rem\\'".; \
+                return 1; \
+            fi; \
+            branch=\"$rem\"; \
+        done; \
+        [ ! -z \"$branch\" ] && git co $(basename $branch) && return 0; \
+        return 1; \
+    }; f"

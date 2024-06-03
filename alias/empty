@@ -1,0 +1,46 @@
+[alias]
+    emptycob = "!f() { \
+        if [ $# -lt 1 ]; then echo Usage: git emptycob branchname [options]; fi; \
+        git reset; \
+        git checkout -b \"$@\" || exit 1; \
+        git commit --allow-empty -m \"Created branch $1\"; \
+    }; f"
+    emptycheck = "!f() { \
+        NAME=$(git name); \
+        if [ \"$NAME\" = $(git mainmaster) ]; then return 1; fi; \
+        PARENT=${1:-$(git mainmaster)}; \
+        BASE=$(git merge-base $NAME $PARENT); \
+        NEXT=$(git rev-list $PARENT..$NAME | tail -1); \
+        HASH=$(git di $BASE $NEXT | md5sum | cut -c -32); \
+        [ \"$HASH\" = d41d8cd98f00b204e9800998ecf8427e ] && return 0; \
+        echo $NAME; \
+        return 1; \
+    }; f"
+    emptyadd = "!f() { \
+        NAME=$(git name); \
+        UPSTREAM=$(git upstream); \
+        if [ \"$NAME\" = $(git mainmaster) ]; then return 1; fi; \
+        PARENT=${1:-$(git mainmaster)}; \
+        BASE=$(git merge-base $NAME $PARENT); \
+        git cob _empty; \
+        git brd $NAME; \
+        git emptycob $NAME $BASE; \
+        git co _empty; \
+        git rebase $NAME; \
+        git brf $NAME _empty; \
+        git co $NAME; \
+        git brd _empty; \
+        git branch -u $UPSTREAM $NAME; \
+    }; f"
+    emptysub = "!f() { \
+        if [ \"$(git name)\" = $(git mainmaster) ]; then echo \"Will not squash $(git mainmaster)\" && return 1; fi; \
+        PARENT=${1:-$(git mainmaster)}; \
+        BASE=$(git merge-base $(git name) $PARENT); \
+        export GIT_SEQUENCE_EDITOR=\"sed -ire '/# empty$/s/^pick/drop/'\"; \
+        git rebase -i $BASE; \
+    }; f"
+    emptyfix = "!f() { \
+        if ! git emptycheck >/dev/null; then \
+            git emptyadd; \
+        fi; \
+    }; f"

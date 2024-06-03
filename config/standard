@@ -1,0 +1,33 @@
+[color]
+    ui = true
+    decorate = short
+    status = auto
+[core]
+    sshCommand = "ssh -q"
+    pager = less
+    autocrlf = false
+    excludesFile = ~/gitconfig/ignore
+    symlinks = true
+[fetch]
+    prune = true
+[pager]
+    dtis = true
+    man = true
+[pull]
+    ff = only
+[merge]
+    ff = only
+[push]
+    default = simple
+    autoSetupRemote = true
+[init]
+    defaultBranch = main
+[tar]
+    umask = 0022
+[checkout]
+    defaultRemote = origin
+[include]
+    path = diff
+    path = log
+    path = merge
+    path = variable

@@ -1,0 +1,63 @@
+[alias]
+    authors = log --format='%aN'
+    authorsreverse = log --format='%aN' --reverse
+    authorssimple = "!f() { git authorsreverse \"$@\" | awk '!visited[$0]++' | tac; }; f"
+    gl = log --graph --abbrev-commit --left-right --pretty=pretty
+    gl1 = !git gl -n 1
+    gl5 = !git gl -n 5
+    gl10 = !git gl -n 10
+    gm = log --reverse --abbrev-commit --first-parent --pretty=minimal
+    gh = log --reverse --abbrev-commit --first-parent --pretty=hash
+    gla = "!f() { if git rev-parse --verify --quiet ^refs/notes/gpg >/dev/null; then git gl --all ^refs/notes/gpg \"$@\"; else git gl --all \"$@\"; fi; }; f"
+    gla1 = !git gla -n 1
+    gla5 = !git gla -n 5
+    gla10 = !git gla -n 10
+    glg = !git gl --all --reflog
+    glr = "!f() { if git rev-parse --verify --quiet ^refs/notes/gpg >/dev/null; then git glg ^refs/notes/gpg; else git glg; fi; }; f"
+    glr1 = !git glr -n 1
+    glr5 = !git glr -n 5
+    glr10 = !git glr -n 10
+    glv = log --name-status
+    glva = !git glv --all --reflog
+    gli = !git gl ..@{u}
+    glo = !git gl @{u}..
+    glir = !git fetch && git gli
+    glor = !git fetch && git glo
+    glocount = "!f() { git glo | git wcl0; }; f"
+    glocountgt = "!f() { [ $(git glocount) -gt 0 ]; }; f"
+    glopath = "!f() { git glocountgt && git broot; }; f"
+    glocount = "!f() { git glo | sed '$ s/$/\\n/' | git wcl0; }; f"
+    glocountgt = "!f() { [ $(git glocount) -gt 0 ]; }; f"
+    glopath = "!f() { git glocountgt && git broot; }; f"
+    gltocount = "!f() { git glto \"$@\" | git wcl1; }; f"
+    gltocountgt = "!f() { [ $(git gltocount \"$@\") -gt 0 ]; }; f"
+    gltopath = "!f() { git gltocountgt && git broot; }; f"
+    glfromcount = "!f() { git glfrom \"$@\" | git wcl1; }; f"
+    glfromcountgt = "!f() { [ $(git glfromcount \"$@\") -gt 0 ]; }; f"
+    glfrompath = "!f() { git glfromcountgt && git broot; }; f"
+    incoming = !git fetch && git log --left-right ..@{u}
+    logv = log --stat --dirstat --summary --graph --date=local --pretty=fuller --show-signature
+    logv1 = !git logv -n 1
+    logv5 = !git logv -n 5
+    logv10 = !git logv -n 10
+    outgoing = !git fetch && git log --left-right @{u}..
+    glto = "!f() { \
+        to=${1:-origin/$(git mainmaster)};                    : Get target branch; \
+        from=${2:-$(git rev-parse --abbrev-ref HEAD)};        : Get source branch; \
+        git merge-base $to $from >/dev/null 2>&1 || return 2; : Ensure branches are related; \
+        BASE=$(git merge-base $to $from);                     : Get base of branches; \
+        if [ $BASE != $(git rev-parse $to) ]; then            : If something to rebase; \
+            git gl $BASE..$from;                              : Output changesets that would be rebased; \
+        fi; \
+        return 0;                                             : Return zero; \
+    }; f"
+    glfrom = "!f() { \
+        from=${1:-origin/$(git mainmaster)};                  : Get source branch; \
+        to=${2:-$(git rev-parse --abbrev-ref HEAD)};          : Get target branch; \
+        git merge-base $from $to >/dev/null 2>&1 || return 2; : Ensure branches are related; \
+        BASE=$(git merge-base $from $to);                     : Get base of branches; \
+        if [ $BASE != $(git rev-parse $to) ]; then            : If something to rebase; \
+            git gl $BASE..$from;                              : Output changesets that would be rebased; \
+        fi; \
+        return 0;                                             : Return zero; \
+    }; f"

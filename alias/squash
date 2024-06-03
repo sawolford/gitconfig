@@ -1,0 +1,27 @@
+[alias]
+    recommit = !git commit --allow-empty-message -t uncommit.txt
+    recommita = !git commit --allow-empty-message -t uncommit.txt -a
+    uncommit = "!f() { \
+        if ! git stowcheck; then return 1; fi;                                              : Call stowcheck alias to see if workspace is ready; \
+        arg=${1:-$(git nearbase)};                                                          : Get argument to uncommit, default to main/master; \
+        if git cat-file -e $arg >/dev/null 2>&1; then hash=$arg;                            : The argument is a hash, so convert it; \
+        else hash=@~$arg; fi;                                                               : The argument is not a hash, so try to make one; \
+        ofile=uncommit.txt;                                                                 : File to store the commit message; \
+        if [ -e $ofile ]; then                                                              : Check to be sure scratch file is available; \
+            echo file $ofile exists, please move;                                           : Output error that scratch file exists; \
+            return 1;                                                                       : Return error code; \
+        fi;                                                                                 : Close if statement; \
+        echo \"# Prior log messages from previous git uncommit are below\" | tee -a $ofile; : Helpful message; \
+        echo | tee -a $ofile;                                                               : Vertical spacing; \
+        git log $hash..@ --format=format:%B | tee -a $ofile;                                : Store the logs of each in the commit message; \
+        git rsoft $hash;                                                                    : Restore changes to the index; \
+        git rmixed;                                                                         : Restore index to the workspace; \
+        return 0;                                                                           : Return zero; \
+    }; f"
+    squash = "!f() { \
+        if git uncommit \"$@\"; then       : Forward to uncommit, checking that it is successful; \
+            git add -- . ':!uncommit.txt'; : Add all files back to index; \
+            git recommit;                  : Then recommit; \
+            rm -f uncommit.txt;            : Clean up workspace; \
+        fi;                                : Close if statement; \
+    }; f"

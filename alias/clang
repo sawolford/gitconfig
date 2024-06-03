@@ -1,0 +1,28 @@
+[alias]
+    genclangconfig = !cd $(git root) && git cpfilesfrom $(git superroot) .clang-format=dot-clang-format .clang-tidy=dot-clang-tidy
+    clangformathelp = "!f() { \
+        pattern=;                                                                           : Match pattern is initially empty; \
+        : .m and .mm excluded below; \
+        for i in c cc cp cpp c++ cxx h hh hpp hxx cu cuh proto protodevel java js ts cs; do : Loop over all supported file extensions; \
+            pattern=\"$pattern -e \\.$i$\";                                                 : Add extension to pattern matching; \
+        done; \
+        cat | grep $pattern | while read line; do                                           : Loop over filtered file types; \
+            clang-format -i $line;                                                          : Execute the format; \
+        done; \
+    }; f"
+    clangformat = "!f() { git prnl \"$@\" | git clangformathelp; }; f"
+    clangformatall = "!f() { git ls-files \"$@\" | git clangformathelp; }; f"
+    clangformatcached = "!f() { git diff --name-only --cached | git clangformathelp; }; f"
+    clangtidy = "!f() { \
+        [ $# -lt 1 ] && echo Usage: clangtidy buildpath && return 1   : Ensure proper number of arguments; \
+        path=$1;                                                      : Get build path from first argument; \
+        pattern=;                                                     : Match pattern is initially empty; \
+        for i in c cc cp cpp c++ cxx; do                              : Loop over all supported file extensions; \
+            pattern=\"$pattern -e \\.$i$\";                           : Add extension to pattern matching; \
+        done; \
+        files=$(${2:-git diff --name-only --cached} | grep $pattern); : Unless argument specified, apply to files in index; \
+        IFS=\"\n\";                                                   : Use newlines as delimiter; \
+        for i in $files; do                                           : Loop over all selected files; \
+            clang-tidy -p $path -fix $i;                              : Apply clang-tidy; \
+        done; \
+    }; f"

@@ -1,0 +1,131 @@
+[alias]
+    di = diff
+    din = "!f() { git di --name-only ${1:-$(git mainmaster)}; }; f"
+    dis = diff --staged
+    dtk = difftool -y -d --tool=kdiff3
+    dtkd = difftool -y --tool=kdiff3
+    dtm = difftool -y -d --tool=meld
+    dtmd = difftool -y --tool=meld
+    dta = difftool -y -d --tool=araxis
+    dtad = difftool -y --tool=araxis
+    dtb = difftool -y -d --tool=bc
+    dtbd = difftool -y --tool=bc
+    dtc = difftool -y --tool=vscode # -d doesn't work well w/ vscode
+    dtt = difftool -y --tool=tkdiff # -d doesn't work well w/ tkdiff
+    dti = difftool -y --tool=icdiff # -d doesn't work well w/ icdiff
+    dtv = difftool -y --tool=vimdiff # -d doesn't work well w/ vimdiff
+    dts = difftool -y -d --staged
+    dtsd = difftool -y --staged
+    dtks = difftool -y -d --tool=kdiff3 --staged
+    dtksd = difftool -y --tool=kdiff3 --staged
+    dtms = difftool -y -d --tool=meld --staged
+    dtmsd = difftool -y --tool=meld --staged
+    dtas = difftool -y -d --tool=araxis --staged
+    dtasd = difftool -y --tool=araxis --staged
+    dtbs = difftool -y -d --tool=bc --staged
+    dtbsd = difftool -y -d --tool=bc --staged
+    dtcs = difftool -y -d --tool=vscode --staged
+    dtts = difftool -y -d --tool=tkdiff --staged
+    dtis = difftool -y --tool=icdiff --staged
+    dtvs = difftool -y --tool=vimdiff --staged
+    dii = !git di @{u}..@
+    dio = !git di @..@{u}
+    dtii = !git dti @{u}..@
+    dtio = !git dti @..@{u}
+    dtti = !git dtt @{u}..@
+    dtto = !git dtt @..@{u}
+    dir = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git di ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git difftool ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtkr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtk -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtmr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtm -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtar = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dta -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtbr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtb -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtcr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtc -d ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dttr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtt ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtir = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dti ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dtvr = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtv ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dimb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git di --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git difftool --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtkmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtk --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtmmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtm --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtamb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dta --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtbmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtb --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtcmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtc --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dttmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtt --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtimb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dti --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dtvmb = "!f() { \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git dtv --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    dim = "!f() { git dimb $(git mainmaster) \"$@\"; }; f"
+    dtm = "!f() { git dtmb $(git mainmaster) \"$@\"; }; f"
+    dtkm = "!f() { git dtkmb $(git mainmaster) \"$@\"; }; f"
+    dtmm = "!f() { git dtmmb $(git mainmaster) \"$@\"; }; f"
+    dtam = "!f() { git dtamb $(git mainmaster) \"$@\"; }; f"
+    dtbm = "!f() { git dtbmb $(git mainmaster) \"$@\"; }; f"
+    dtcm = "!f() { git dtcmb $(git mainmaster) \"$@\"; }; f"
+    dttm = "!f() { git dttmb $(git mainmaster) \"$@\"; }; f"
+    dtim = "!f() { git dtimb $(git mainmaster) \"$@\"; }; f"
+    dtvm = "!f() { git dtvmb $(git mainmaster) \"$@\"; }; f"
+    ditrans = "!f() { \
+        [ $# -ne 1 ] && echo Usage: ditrans path && return 1; : Ensure proper number of arguments; \
+        [ -e $1/.git ] || echo ditrans: No .git at $1.; \
+        git di | (cd $1 && git apply -); \
+    }; f"
