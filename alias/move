@@ -1,0 +1,33 @@
+[alias]
+    swdetach = !git sw --detach
+    branchmv = "!f() { \
+        [ $# -ne 2 ] && echo Usage: branchmv source target && return 1;          : Ensure proper number of arguments; \
+        SOURCE=$1; shift;                                                        : Get branch name to move; \
+        TARGET=$1; shift;                                                        : Get branch name to target; \
+        if ! git attached; then echo branchmv: on detached HEAD && return 1; fi; : Ensure that HEAD is not detached HEAD; \
+        UPSTREAM=$(git upstream $SOURCE);                                        : Store prior upstream; \
+        cmd=\"checkout --detach\";                                               : Set next command; \
+        echo $(git prinfo) detach HEAD $(git prextra $cmd);                      : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                : Detach just in case; \
+        cmd=\"branch -f $SOURCE $TARGET\";                                       : Set next command; \
+        echo $(git prinfo) force move branch $(git prextra $cmd);                : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                : Force move the branch; \
+        cmd=\"branch --set-upstream-to=$UPSTREAM $SOURCE\";                      : Set next command; \
+        echo $(git prinfo) reset upstream back $(git prextra $cmd);              : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                : Reset the upstream back; \
+        cmd=\"checkout -\";                                                      : Set next command; \
+        echo $(git prinfo) return to prior branch $(git prextra $cmd);           : Output next command; \
+        git $cmd >/dev/null 2>&1;                                                : Return to previous branch; \
+    }; f"
+    branchto = "!f() { \
+        [ $# -lt 1 ] && echo Usage: branchto source && return 1; : Ensure proper number of arguments; \
+        SOURCE=$(git ref);                                       : Get branch name to move; \
+        TARGET=$1;                                               : Get branch name to target; \
+        git branchmv $SOURCE $TARGET;                            : Move branch; \
+    }; f"
+    branchfrom = "!f() { \
+        [ $# -lt 1 ] && echo Usage: branchfrom target && return 1; : Ensure proper number of arguments; \
+        TARGET=$(git ref);                                         : Get branch name to move; \
+        SOURCE=$1;                                                 : Get branch name to target; \
+        git branchmv $SOURCE $TARGET;                              : Move branch; \
+    }; f"
