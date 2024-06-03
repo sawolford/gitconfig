@@ -1,0 +1,106 @@
+[alias]
+    pkcs11push = "!f() { git rev-parse --verify --quiet refs/notes/pkcs11 >/dev/null 2>&1 && git push ${1:-origin} refs/notes/pkcs11; }; f"
+    pkcs11pushd = "!f() { git push --delete ${1:-origin} refs/notes/pkcs11; }; f"
+    pkcs11cleanup = "!f() { rm -f .git/refs/notes/pkcs11 .git/logs/refs/notes/pkcs11; git cleanup; }; f"
+    pkcs11pull = "!f() { \
+        RFN=refs/notes/pkcs11;                                          : Store for later use; \
+        echo $(git prheader) $(git hilite pkcs11pull);                  : Output command header; \
+        if ! git attached; then return 1; fi;                           : Ensure that HEAD is not detached HEAD; \
+        PREV=$(git ref);                                                : Store ref of HEAD; \
+        cmd=\"fetch ${1:-origin} $RFN:$RFN\";                           : Set next command; \
+        echo $(git prinfo) fetch pkcs11 $(git prextra $cmd);            : Output next command; \
+        git $cmd >/dev/null 2>&1;                                       : Download changesets from origin remote; \
+        if ! git rev-parse --verify $RFN >/dev/null 2>&1; then          : Check for notes branch; \
+            echo pkcs11pull: No notes to merge;                         : Output warning message; \
+            return 0;                                                   : Return zero; \
+        fi; \
+        cmd=\"checkout $RFN\";                                          : Set next command; \
+        echo $(git prinfo) checkout pkcs11 $(git prextra $cmd);         : Output next command; \
+        git $cmd >/dev/null 2>&1;                                       : Download changesets from origin remote; \
+        if ! git stow; then return 1; fi;                               : Call stow alias to temporarily store Workspace; \
+        cmd=\"rebase FETCH_HEAD\";                                      : Set next command; \
+        echo $(git prinfo) rebase pkcs11 $(git prextra $cmd);           : Output next command; \
+        git $cmd;                                                       : Download changesets from origin remote; \
+        for file in $(git diff --name-only --diff-filter=U); do         : Loop over unmerged changes; \
+            git show :2:$file :3:$file > $file;                         : Write out to file; \
+        done; \
+        cmd=\"add .\";                                                  : Set next command; \
+        echo $(git prinfo) add concatenated pkcs11 $(git prextra $cmd); : Output next command; \
+        git $cmd;                                                       : Download changesets from origin remote; \
+        cmd=\"commit -m Notes\";                                        : Set next command; \
+        echo $(git prinfo) commit rebase $(git prextra $cmd);           : Output next command; \
+        git $cmd;                                                       : Download changesets from origin remote; \
+        cmd=\"rebase --skip\";                                          : Set next command; \
+        echo $(git prinfo) skip $(git prextra $cmd);                    : Output next command; \
+        git $cmd >/dev/null 2>&1;                                       : Download changesets from origin remote; \
+        cmd=\"update-ref $RFN HEAD\";                                   : Set next command; \
+        echo $(git prinfo) update-ref on pkcs11 $(git prextra $cmd);    : Output next command; \
+        git $cmd;                                                       : Download changesets from origin remote; \
+        cmd=\"checkout $PREV\";                                         : Set next command; \
+        echo $(git prinfo) checkout $PREV $(git prextra $cmd);          : Output next command; \
+        git $cmd;                                                       : Download changesets from origin remote; \
+        git unstow;                                                     : Call unstow alias to restore Workspace to former condition; \
+        return 0;                                                       : Return zero; \
+    }; f"
+    password = "!f() { \
+        >&2 printf \"${1:-PASSWORD}: \"; \
+        unset password; \
+        while IFS= read -r -s -n1 pass; do \
+            if [[ -z $pass ]]; then \
+                echo; \
+                break; \
+            else \
+                >&2 printf '*'; \
+                password+=$pass; \
+            fi; \
+        done; \
+        printf \"${2:-password}=$password\\n\"; \
+    }; f"
+    pkcs11pkcs11 = "!f() { \
+        eval $(git password PIN pin); \
+        echo; \
+        git catf ${1:-HEAD} | openssl dgst -sha256 -hex -binary > dgst.dgst; \
+        pkcs11-tool --id 1 -s -m RSA-PKCS --pin \"$pin\" --input-file dgst.dgst --output-file dgst.dgst.sig >/dev/null; \
+        cat dgst.dgst.sig | base64; \
+    }; f"
+    pkcs11sign = "!f() { \
+        rev=${1:-HEAD}; \
+        git pkcs11pkcs11 $rev | tail -1 | sed 's,.*,BASE64BEGIN&BASE64END,' | git notes --ref pkcs11 append -F - $rev; \
+    }; f"
+    pkcs11unsign = "!f() { \
+        [[ $# -ne 2 ]] && echo Usage: pkcs11unsign revision pattern && return 1; \
+        rev=$1; \
+        pattern=$2; \
+        git pkcs11signs $rev |  awk -v PATTERN=$pattern 'BEGIN { RS=\"BASE64BEGIN\" } \
+            { if (!index($0, PATTERN) && index($0, \"BASE64END\")) { print RS; print } }' \
+            | git notes --ref pkcs11 add -f -F - $rev; \
+    }; f"
+    pkcs11signs = "!f() { \
+        git notes --ref pkcs11 show ${1:-HEAD}; \
+    }; f"
+    pkcs11verify = "!f() { \
+        rev=${1:-HEAD}; \
+        bash -c \"git catf $rev | pkcs11 --verify <(git pkcs11signs $rev) -\" 2>&1; \
+    }; f"
+    pkcs11verifyall = "!f() { \
+        rv=\"\"; \
+        for rev in $(git hashes); do \
+            echo \"=== $rev ===\"; \
+            if ! git pkcs11verify $rev; then rv=\"$rv $rev\"; fi; \
+        done; \
+        echo $rv | tee /dev/stderr >/dev/null; \
+    }; f"
+    pkcs11verifysum = "!f() { git pkcs11verifyall >/dev/null; }; f"
+    cacpush = pkcs11push
+    cacpushd = pkcs11pushd
+    caccleanup = pkcs11cleanup
+    cacpull = pkcs11pull
+    cacpkcs11 = pkcs11pkcs11
+    cacsign = pkcs11sign
+    cacunsign = pkcs11unsign
+    cacsigns = pkcs11signs
+    cacsignkeys = pkcs11signkeys
+    cacsigndates = pkcs11signdates
+    cacverify = pkcs11verify
+    cacverifyall = pkcs11verifyall
+    cacverifysum = pkcs11verifysum

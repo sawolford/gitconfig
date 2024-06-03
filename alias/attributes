@@ -1,0 +1,65 @@
+[alias]
+    repeatstr = "!f() { printf \"%0.s${2:- }\" $($SHELL -c \"echo {1..$1}\"); }; f"
+    genattributes = "!f() { \
+        if [ $# -lt 1 ]; then \
+            echo Usage: genattributes attribute [maxlen]; \
+            return 1; \
+        fi; \
+        command=\"lscaunspecified $1\"; \
+        repl=\": $1: unspecified\"; \
+        if [ $# -gt 1 ]; then \
+            maxlen=$2; \
+        elif git $command >/dev/null 2>&1; then \
+            maxlen=$(git $command | awk '{ print length }' | sort -n | tail -1); \
+            maxlen=$(expr $maxlen - ${#repl} + 2); \
+        else return 0; \
+        fi; \
+        git $command | while read line; do \
+            line=$(echo \"$line\" | sed \"s<$repl<<\"); \
+            left=$(expr $maxlen - ${#line}); \
+            printf '%s%s%s\\12' \"$line\" \"$(git repeatstr $left)\" text; \
+        done; \
+    }; f"
+    filetype = "!f() { \
+        command() { git ls-files -z | xargs -0 file; }; : Base command, file, to run; \
+        if [ $# -gt 0 ]; then command | grep \"$@\";    : If arguments, filter through grep; \
+        else command; fi;                               : If not, just output; \
+    }; f"
+    mimetype = "!f() { \
+        command() { git ls-files -z | xargs -0 file --mime; }; : Base command, file --mime, to run; \
+        if [ $# -gt 0 ]; then command | grep \"$@\";           : If arguments, filter through grep; \
+        else command; fi; :                                    : If not, just output; \
+    }; f"
+    nonascii = "!f() { \
+        if type pcregrep >/dev/null 2>&1; then command=pcregrep; : Use pcregrep command if available; \
+        else command=\"grep -P\"; fi;                            : Else use grep -P; \
+        $command --color=auto -n \"[^\\x0-\\x7f]\" \"$@\";       : Execute command to print non-ascii characters; \
+    }; f"
+    nonasciiall = "!f() { \
+        git notasciilist | tr \"\\12\" \"\\0\" | xargs -0 git nonascii; : List all files with non-ascii characters and print those characters; \
+    }; f"
+    gitbinary = "!f() { \
+        git diff $(git empty) --numstat HEAD -- \"$@\" | grep ^- | cut -f 3; : List git binary files; \
+    }; f"
+    gittext = "!f() { \
+        git diff $(git empty) --numstat HEAD -- \"$@\" | grep -v ^- | cut -f 3; : List git text files; \
+    }; f"
+    charsets = "!f() { \
+        types='binary us-ascii utf-8 iso-8859-1 unknown-8bit utf-16le utf-16be ebcdic'; : All the charsets likely to be encountered; \
+        maxlen=20;                                                                      : Minimum spacing on output; \
+        for type in $types; do                                                          : Loop over likely charsets; \
+            count=$(git mimetype $type | wc -l);                                        : Count number of files of that charset; \
+            left=$(expr $maxlen - ${#type});                                            : Find spacing required; \
+            printf '%s%s%d\\12' $type \"$(git repeatstr $left)\" $count;                : Print out the count with spacing; \
+        done;                                                                           : Done with charset; \
+    }; f"
+    forceeol = "!f() { \
+        LOCALFILE=.git/info/attributes;                                     : Filename to write to; \
+        if [ $# -ne 2 ]; then echo Usage: forceeol match eol; return 1; fi; : Ensure proper number of arguments; \
+        grep \"$1 text eol=$2\" $LOCALFILE >/dev/null 2>&1 && return;       : Ensure that config has not already been set; \
+        echo \"$1\" text eol=$2 | tee -a $LOCALFILE;                        : Write the attribute to the proper local file; \
+    }; f"
+    resetperms = "!f() { \
+        git diff -p -R --no-ext-diff --no-color | grep -E \"^(old|new) mode\" >/dev/null 2>&1 || return 0;      : Return if no mode changes; \
+        git diff -p -R --no-ext-diff --no-color | grep -E \"^(diff|(old|new) mode)\" --color=never | git apply; : Apply reverse patch to fix permissions; \
+    }; f"
