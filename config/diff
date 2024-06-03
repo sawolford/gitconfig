@@ -1,0 +1,29 @@
+[diff]
+    tool = meld
+[difftool]
+    trustExitCode = false
+[difftool "icdiff"]
+    cmd = icdiff --head=5000 -H -N -L \"$BASE\" -L \"$REMOTE\" \"$LOCAL\" \"$REMOTE\"
+[difftool "opendiff"]
+    cmd = opendiff \"$BASE\" \"$LOCAL\" | cat
+[difftool "vscode"]
+    cmd = code --wait --diff \"$LOCAL\" \"$REMOTE\"
+[difftool "araxis"]
+    path = araxiscompare2
+[pager]
+    dti = true
+[merge]
+    tool = meld
+[mergetool]
+    trustExitCode = true
+    keepBackup = false
+[mergetool "opendiff"]
+    cmd = opendiff \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\" | cat
+[mergetool "vscode"]
+    cmd = code --wait --merge \"$REMOTE\" \"$LOCAL\" \"$BASE\" \"$MERGED\"
+[mergetool "araxis"]
+    path = araxiscompare2
+# $LOCAL is the file in the current branch
+# $REMOTE is the file in the branch being merged
+# $MERGED is the partially merged file conflict information
+# $BASE is the shared commit ancestor of $LOCAL and $REMOTE

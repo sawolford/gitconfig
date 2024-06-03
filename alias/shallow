@@ -1,0 +1,51 @@
+[alias]
+    grafted = "!f() { git log --oneline --format=%D | grep -q ^grafted; }; f"
+    localbranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/heads/; }; f"
+    localtags = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/tags/; }; f"
+    deletelocalbranches = "!f() { git branch -D $(git localbranches | grep -v $(git name)) >/dev/null 2>&1; }; f"
+    deletelocaltags = "!f() { git tag -d $(git localtags); }; f"
+    remotebranches = "!f() { git for-each-ref --format=\"%(refname:short)\" refs/remotes/; }; f"
+    remotetags = "!f() { git ls-remote --refs --tags ${1:-origin} | sed 's,.*refs/tags/,,'; }; f"
+    deleteremotebranches = "!f() { git branch -rD $(git remotebranches) >/dev/null 2>&1; }; f"
+    deleteremotetags = "!f() { git pushd $(git remotetags); }; f"
+    orphanbranches = "!f() { git for-each-ref --format '%(refname) %(upstream:track)' refs/heads | awk '$2 == \"[gone]\" {sub(\"refs/heads/\", \"\", $1); print $1}'; }; f"
+    deleteorphanbranches = "!f() { git branch -D $(git orphanbranches) >/dev/null 2>&1; }; f"
+    goshallow = "!f() { \
+        if ! git attached; then return 1; fi;                                               : Ensure that HEAD is not detached HEAD; \
+        BRANCH=$(git name HEAD);                                                            : Get current branch name; \
+        git config remote.origin.fetch \"+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH\"; : Map only current branch; \
+        git deletelocalbranches;                                                            : Delete local branches; \
+        git deleteremotebranches;                                                           : Delete remote branches; \
+        git deletelocaltags;                                                                : Delete local tags; \
+        git fetchd 1;                                                                       : Fetch most recent commit; \
+        git rbranch;                                                                        : Reset to that upstream branch; \
+        git cleanup;                                                                        : Expire unreferenced commits; \
+        git gcprune;                                                                        : Garbage collect; \
+    }; f"
+    pullshallow = "!f() { \
+        if ! git grafted; then  : If not a shallow clone; \
+            echo regular clone; : Print error message; \
+            return 1;           : Return one; \
+        fi; \
+        git goshallow;          : Switch to shallow clone; \
+    }; f"
+    godeep = "!f() { \
+        if git grafted; then                                                      : If a shallow clone; \
+            git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'; : Map all branches; \
+            git fetch --unshallow;                                                : Fetch all commits; \
+            BRANCH=$(git name HEAD | sed 's,remotes/origin/,,');                  : Save current branch; \
+            git co \"$BRANCH\";                                                   : Checkout same branch; \
+            git remote set-head origin \"$BRANCH\";                               : Set origin/HEAD to main; \
+        fi; \
+    }; f"
+    pulldeep = "!f() { \
+        if git grafted; then    : If a shallow clone; \
+            echo shallow clone; : Print error message; \
+            return 1;           : Return one; \
+        fi; \
+        git pull;               : Execute pull; \
+    }; f"
+    pullboth = "!f() { \
+        if git grafted; then git pullshallow; : Pull shallow on shallow clone; \
+        else git pulldeep; fi;                : Pull deep on deep clone; \
+    }; f"

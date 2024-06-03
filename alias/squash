@@ -1,0 +1,19 @@
+[alias]
+    uncommit = "!f() { \
+        [ -n \"$(git status -s)\" ] && { echo \"Local modifications\"; return 1; }; : Check for local mods; \
+        arg=${1:-$(git nearbase)};                                                  : Get argument to uncommit, default to main/master; \
+        if git cat-file -e $arg >/dev/null 2>&1; then hash=$arg;                    : The argument is a hash, so convert it; \
+        else hash=@~$arg; fi;                                                       : The argument is not a hash, so try to make one; \
+        git log $hash..@ --pretty=message;                                          : Output the logs of each; \
+        git rsoft $hash;                                                            : Restore changes to the index; \
+        return 0;                                                                   : Return zero; \
+    }; f"
+    squash = "!f() { \
+        [ -n \"$(git status -s)\" ] && { echo \"Local modifications\"; return 1; }; : Check for local mods; \
+        file=$(mktemp);                                                             : Get temporary file; \
+        git uncommit \"$@\">$file;                                                  : Uncommit code; \
+        printf \"\n\n\n#### Prior log messages above\n\" | tee -a $file >/dev/null; : Helpful message; \
+        git commit --allow-empty-message -t $file;                                  : Recommit changes; \
+        rm -f $file;                                                                : Clean up temporary file; \
+        return 0;                                                                   : Return zero; \
+    }; f"

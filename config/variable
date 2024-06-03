@@ -1,0 +1,11 @@
+[variable]
+    dohtml = false
+    smquiet = false
+    smrecursive = true
+    python = python
+    rebasebackups = false
+    curl = curl -sSk
+    gitlabverbose = false
+    sed = sed
+    recurse-submodules = --R
+    include-path = --I

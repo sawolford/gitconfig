@@ -1,0 +1,14 @@
+[include]
+    path = unix
+[alias]
+    gitconfigplat = !echo wsl
+[difftool "kdiff3"]
+    cmd = kdiff3.exe \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\"
+[difftool "meld"]
+    cmd = meld.exe \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\"
+[mergetool "kdiff3"]
+    cmd = kdiff3.exe -m \"`wslpath -m $BASE`\" \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\" -o \"`wslpath -m $MERGED`\"
+    trustExitCode = false
+[mergetool "meld"]
+    cmd = meld.exe \"`wslpath -m $BASE`\" \"`wslpath -m $LOCAL`\" \"`wslpath -m $REMOTE`\" -o \"`wslpath -m $MERGED`\"
+    trustExitCode = false
