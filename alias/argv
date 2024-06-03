@@ -1,0 +1,43 @@
+[variable]
+    argbefore = "-u=\\t$-c submodule.$arg.update=checkout\\n-i=\\t$-c include.path=$(pwd)/$arg\\n-x=\\t$-c include.path=$arg"
+    argafter = "-r\\t--recurse-submodules"
+[alias]
+    ahelper = "!f() { \
+        command=$1; shift; \
+        IFS=\"\\\t\"; \
+        preargs=; \
+        postargs=; \
+        for argi; do \
+            shift; \
+            IFS=\"\n\"; \
+            prematched=false; \
+            for rep in $(git varvalue argbefore); do \
+                lhs=\"${rep%\t*}\"; \
+                rhs=\"${rep#*\t}\"; \
+                if [[ \"$argi\" =~ ^$lhs ]]; then \
+                    arg=${argi/$lhs/}; \
+                    if [[ ${rhs:0:1} = \"$\" ]]; then argi=$(eval echo ${rhs:1}); \
+                    else argi=\"$rhs\"; fi; \
+                    prematched=true; \
+                fi; \
+            done; \
+            $prematched && preargs+=\"$argi \"; \
+            postmatched=false; \
+            for rep in $(git varvalue argafter); do \
+                lhs=\"${rep%\t*}\"; \
+                rhs=\"${rep#*\t}\"; \
+                if [[ \"$argi\" =~ ^$lhs ]]; then \
+                    arg=${argi/$lhs/}; \
+                    if [[ ${rhs:0:1} = \"$\" ]]; then argi=$(eval echo ${rhs:1}); \
+                    else argi=\"$rhs\"; fi; \
+                    postmatched=true; \
+                fi; \
+            done; \
+            $postmatched && postargs+=\"$argi \"; \
+            ! $prematched && ! $postmatched && set -- \"$@\" \"$argi\"; \
+        done; \
+        echo git $preargs $command \"$@\" $postargs; \
+        eval git $preargs $command \"$@\" $postargs; \
+    }; f"
+    aclone = ahelper clone
+    asubmodule = ahelper submodule

@@ -1,0 +1,48 @@
+[alias]
+    di = diff
+    dis = diff --staged
+    dname = "!f() { git diff --name-only ${1:-HEAD}^..${1:-HEAD}; }; f"
+    dstat = "!f() { git diff --stat ${1:-HEAD}^..${1:-HEAD}; }; f"
+    dt = difftool -y -d
+    dtk = difftool -y -d --tool=kdiff3
+    dtkd = difftool -y --tool=kdiff3
+    dtm = difftool -y -d --tool=meld
+    dtmd = difftool -y --tool=meld
+    dta = difftool -y -d --tool=araxis
+    dtad = difftool -y --tool=araxis
+    dtb = difftool -y -d --tool=bc
+    dtbd = difftool -y --tool=bc
+    dtc = difftool -y --tool=vscode # -d doesn't work well w/ vscode
+    dtt = difftool -y --tool=tkdiff # -d doesn't work well w/ tkdiff
+    dti = difftool -y --tool=icdiff # -d doesn't work well w/ icdiff
+    dtv = difftool -y --tool=vimdiff # -d doesn't work well w/ vimdiff
+    dts = difftool -y -d --staged
+    dtsd = difftool -y --staged
+    dxi = "!f() { \
+        [ $# -eq 0 ] && { echo \"Usage: dxi diff\"; return 1; }; \
+        cmd=$1; shift; \
+        git $cmd @..@{u} \"$@\"; \
+    }; f"
+    dxo = "!f() { \
+        [ $# -eq 0 ] && { echo \"Usage: dxo diff\"; return 1; }; \
+        cmd=$1; shift; \
+        git $cmd @{u}..@ \"$@\"; \
+    }; f"
+    dxr = "!f() { \
+        [ $# -eq 0 ] && { echo \"Usage: dxr diff [rev]\"; return 1; }; \
+        cmd=$1; shift; \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git $cmd ${rev:-HEAD}^..${rev:-HEAD} \"$@\"; \
+    }; f"
+    dxb = "!f() { \
+        [ $# -eq 0 ] && { echo \"Usage: dxb diff\"; return 1; }; \
+        cmd=$1; shift; \
+        if [ $# -gt 0 ]; then rev=$1; shift; fi; \
+        git $cmd --merge-base ${rev:-$(git mainmaster)} \"$@\"; \
+    }; f"
+    diapply = "!f() { \
+        [ $# -ne 1 ] && echo Usage: diapply path && return 1; : Ensure proper number of arguments; \
+        [ -e $1/.git ] || echo diapply: No .git at $1.; \
+        cd $1; \
+        git apply -; \
+    }; f"

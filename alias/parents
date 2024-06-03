@@ -1,0 +1,95 @@
+[variable]
+    mergedtotagsscriptprefix = "pre/"
+    mergedtotagsscriptpostfix = "post/"
+[alias]
+    allparents = "!f() { arg=${1:-HEAD}; shift; git rev-list --parents \"$arg\" \"$@\"; }; f"
+    parents = "!f() { arg=${1:-HEAD}; shift; git allparents \"$arg\" \"$@\" -n 1; }; f"
+    allparentscount = "!f() { \
+        git allparents \"$@\" | while read line; do \
+            count=$(echo $line | wc -w); \
+            sline=${line%% *}; \
+            echo $sline $count; \
+        done; \
+    }; f"
+    allparentssum = "!f() { git allparentscount \"$@\" | sed 's,.* ,,' | sort | uniq -c | awk '{ print $2, $1}'; }; f"
+    mergedtotagsscriptpre = "!f() { \
+        target=${1:-$(git name)}; \
+        git remotebranches | grep -v origin/HEAD | sed 's,.*/,,' | while read rbranch; do \
+            git co $rbranch >/dev/null 2>&1; \
+        done; \
+        git co $target >/dev/null 2>&1; \
+        echo git checkout $(git mainmaster) ' # exec: start on main branch'; \
+        git branch --merged $target | grep -v '^\\*' | while read branch; do \
+            git parents $branch | grep \" .* \" >/dev/null 2>&1 && continue; \
+            remote=\"\"; \
+            git upstream $branch >/dev/null 2>&1 && remote=$(dirname $(git upstream $branch)); \
+            [ -z \"$remote\" ] || echo git push --delete $remote $branch ' # exec: delete remote branch'; \
+            tagname=$(git varvalue mergedtotagsscriptprefix)$branch; \
+            >&2 echo git tag -d $tagname ' # undo: delete local tag'; \
+            >&2 echo git push origin :$tagname ' # undo: delete remote tag'; \
+            echo git tag $tagname $branch ' # exec: create local tag'; \
+            echo git branch -D $branch ' # exec: delete local branch'; \
+            >&2 echo git checkout -b $branch $(git lname $branch) ' # undo: create branch at tag'; \
+            >&2 echo git push -u origin $branch ' # undo: push branch to remote'; \
+        [ -z \"$remote\" ] || echo git push --tags $remote $tagname ' # exec: push tag to remote'; \
+        done; \
+    }; f"
+    mergedtotagsscriptpost = "!f() { \
+        target=${1:-$(git name)}; \
+        git remotebranches | grep -v origin/HEAD | sed 's,.*/,,' | while read rbranch; do \
+            git co $rbranch >/dev/null 2>&1; \
+        done; \
+        git co $target >/dev/null 2>&1; \
+        echo git checkout $(git mainmaster) ' # exec: start on main branch'; \
+        git branch --merged $target | grep -v '^\\*' | while read branch; do \
+            git parents $branch | grep \" .* \" >/dev/null 2>&1 && continue; \
+            remote=\"\"; \
+            git upstream $branch >/dev/null 2>&1 && remote=$(dirname $(git upstream $branch)); \
+            tagname=$(git varvalue mergedtotagsscriptpostfix)$branch; \
+            >&2 echo git tag -d $tagname ' # undo: delete local tag'; \
+            >&2 echo git push origin :$tagname ' # undo: delete remote tag'; \
+            if [ ! -z \"$remote\" ]; then \
+                echo git checkout $branch ' # exec: create local branch'; \
+                echo git checkout $(git mainmaster) ' # exec: switch back to main branch'; \
+                echo git push --delete $remote $branch ' # exec: delete remote branch'; \
+                >&2 echo git checkout -b $branch $(git lname $branch) ' # undo: create branch at tag'; \
+                >&2 echo git push -u origin $branch ' # undo: push branch to remote'; \
+            fi; \
+            merged=$(git log --merges --pretty=format:\"%h\" $branch..$target | tail -1); \
+            echo git tag $tagname $merged ' # exec: create local tag'; \
+            echo git branch -D $branch ' # exec: delete local branch'; \
+            [ -z \"$remote\" ] || echo git push --tags $remote $tagname ' # exec: push tag to remote'; \
+        done; \
+    }; f"
+    mergedtotagsscriptboth = "!f() { \
+        target=${1:-$(git name)}; \
+        git remotebranches | grep -v origin/HEAD | sed 's,.*/,,' | while read rbranch; do \
+            git co $rbranch >/dev/null 2>&1; \
+        done; \
+        git co $target >/dev/null 2>&1; \
+        echo git checkout $(git mainmaster) ' # exec: start on main branch'; \
+        git branch --merged $target | grep -v '^\\*' | while read branch; do \
+            git parents $branch | grep \" .* \" >/dev/null 2>&1 && continue; \
+            remote=\"\"; \
+            git upstream $branch >/dev/null 2>&1 && remote=$(dirname $(git upstream $branch)); \
+            if [ ! -z \"$remote\" ]; then \
+                echo git push --delete $remote $branch ' # exec: delete remote branch'; \
+                >&2 echo git checkout -b $branch $(git lname $branch) ' # undo: create branch at tag'; \
+                >&2 echo git push -u origin $branch ' # undo: push branch to remote'; \
+            fi; \
+            tagname=$(git varvalue mergedtotagsscriptprefix)$branch; \
+            echo git tag $tagname $branch ' # exec: create local tag'; \
+            >&2 echo git tag -d $tagname ' # undo: delete local tag'; \
+            >&2 echo git push origin :$tagname ' # undo: delete remote tag'; \
+            if [ ! -z \"$remote\" ]; then \
+                echo git push --tags $remote $tagname ' # exec: push tag to remote'; \
+            fi; \
+            merged=$(git log --merges --pretty=format:\"%h\" $branch..$target | tail -1); \
+            tagname=$(git varvalue mergedtotagsscriptpostfix)$branch; \
+            echo git tag $tagname $merged ' # exec: create local tag'; \
+            echo git branch -D $branch ' # exec: delete remote branch'; \
+            >&2 echo git tag -d $tagname ' # undo: delete local tag'; \
+            >&2 echo git push origin :$tagname ' # undo: delete remote tag'; \
+            [ -z \"$remote\" ] || echo git push --tags $remote $tagname ' # exec: push tag to remote'; \
+        done; \
+    }; f"
