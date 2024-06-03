@@ -1,0 +1,16 @@
+[log]
+    abbrevCommit = true
+    date = relative
+    decorate = short
+    graphColors = cyan,magenta,yellow
+[color "decorate"]
+    branch = green
+    HEAD = cyan
+    remoteBranch = red
+    tag = blue
+    stash = yellow
+[pretty]
+    pretty = "format:%C(auto)%h%Creset %C(bold blue)%<(16)%an%C(reset) %C(bold magenta)%<(16)%cD%C(reset) %C(auto)%d%C(reset) %s"
+    author = "%C(bold blue)%<(16)%an%C(reset)"
+    minimal = "format:%h:%ct:%cD:\t%s"
+    hash = format:%h

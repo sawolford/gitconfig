@@ -1,0 +1,133 @@
+[alias]
+    gitlabcall = "!f() { \
+        [ $# -lt 2 ] && echo Usage: gitlabcall token extra type path call && return 1;                          : Ensure proper number of arguments; \
+        token=$1; shift;                                                                                        : Get API token from arguments; \
+        extra=$1; shift;                                                                                        : Get extra arguments; \
+        type=$1; shift;                                                                                         : Get API type from arguments; \
+        path=$(git urlencode $(git gitlabpath \"$1\")); shift;                                                  : Get repository path from arguments; \
+        call=$1; shift;                                                                                         : Get API call from arguments; \
+        git varset gitlabhost || { >&2 echo gitlabcall: must set git config variable.gitlabhost; return 1; };   : Ensure gitlabhost variable is set; \
+        host=$(git varvalue gitlabhost);                                                                        : Get value of gitlabhost variable; \
+        git varset curl || { >&2 echo gitlabcall: must set git config variable.curl; return 1; };               : Ensure gitlabhost variable is set; \
+        curl=$(git varvalue curl);                                                                              : Get value of gitlabhost variable; \
+        fullurl=\"https://$host/api/v4/$type/$path/$call\";                                                     : Construct full URL for call; \
+        sep=\"?\";                                                                                              : Set initial API argument separator; \
+        args=\"\";                                                                                              : Default args to empty; \
+        while true; do                                                                                          : Loop while remaining arguments; \
+            [ $# -eq 0 ] && break;                                                                              : Exit loop when no more arguments; \
+            args=\"$args$sep\";                                                                                 : Append argument separator; \
+            temp=$(git urlencode \"$1\" | sed 's,%3D,=,');                                                      : Encode argument; \
+            args=\"$args$temp\";                                                                                : Append argument; \
+            shift;                                                                                              : Prepare loop for next argument; \
+            sep=\"&\";                                                                                          : Change separator for rest of arguments; \
+        done; \
+        cmd=\"$curl --header PRIVATE-TOKEN:$token $extra \"$fullurl$args\"\";                                   : Set next command; \
+        git vartrue gitlabverbose && >&2 echo $cmd; $cmd;                                                       : Execute command; \
+        $cmd -i -X HEAD | head -1 | grep \"HTTP/2 200\" >/dev/null 2>&1 || return 1;                            : Return if API call failed; \
+        headers=$($cmd -i -X HEAD);                                                                             : Get headers from command; \
+        page=$(echo \"$headers\" | grep -i x-page: | tr -d '\\r' | sed -E 's@x-page: @@i');                     : Get page number; \
+        totalpages=$(echo \"$headers\" | grep -i x-total-pages: | tr -d '\\r' | sed -E 's@x-total-pages: @@i'); : Get total number of pages; \
+        [ $page -ge $totalpages ] &&  return 1;                                                                 : Return non-zero when all pages have been seen; \
+        return 0;                                                                                               : Return zero more pages to been seen; \
+    }; f"
+    gitlabgetcall = "!f() { \
+        git varset gitlabreadtoken || { >&2 echo gitlabget: must set git config variable.gitlabreadtoken; return 1; }; : Ensure gitlabtoken variable is set; \
+        token=$(git varvalue gitlabreadtoken);                                                                         : Get value of gitlabtoken variable; \
+        git gitlabcall $token \"-X GET\" \"$@\"; \
+    }; f"
+    gitlabpostcall = "!f() { \
+        git varset gitlabwritetoken || { >&2 echo gitlabpost: must set git config variable.gitlabwritetoken; return 1; }; : Ensure gitlabtoken variable is set; \
+        token=$(git varvalue gitlabwritetoken);                                                                           : Get value of gitlabtoken variable; \
+        git gitlabcall $token \"-X POST\" \"$@\"; \
+    }; f"
+    gitlabputcall = "!f() { \
+        git varset gitlabwritetoken || { >&2 echo gitlabput: must set git config variable.gitlabwritetoken; return 1; }; : Ensure gitlabtoken variable is set; \
+        token=$(git varvalue gitlabwritetoken);                                                                          : Get value of gitlabtoken variable; \
+        git gitlabcall $token \"-X PUT\" \"$@\"; \
+    }; f"
+    gitlabpage = "!f() { \
+        page=1; \
+        (while git \"$@\" per_page=25 page=$page; do \
+            page=$(( $page + 1 )); \
+        done) | sed 's@\\]\\[@,@g'; \
+    }; f"
+    gitlabpath = "!f() { \
+        if [ $# -eq 0 ] || [ \"$1\" = \".\" ]; then git remotepath; \
+        else echo $1; fi; \
+        return 0; \
+    }; f"
+    gitlabargs = "!f() { \
+        export MSYS_NO_PATHCONV=1; \
+        [ $# -lt 4 ] && { echo Usage: gitlabargs alias type call project[.=current] extra... && return 1; }; \
+        alias=$1; shift; \
+        type=\"$1\"; shift; \
+        call=\"$1\"; shift; \
+        call1=$(dirname \"$call\"); \
+        call2=$(basename \"$call\"); \
+        project=\"$1\"; shift; \
+        apicall=\"\"; \
+        if [ \"$call1\" = \".\" ]; then \
+            [ \"$call2\" = \".\" ] && project=\"\"; \
+        else \
+            iid=$(git gitlabgetcall $type $project $call1 \"$@\" | git jsoniter iid 2>/dev/null); \
+            apicall=\"$call1/$iid\"; \
+        fi; \
+        [ \"$call2\" != \".\" ] && apicall=\"$apicall/$call2\"; \
+        git $alias \"$type\" \"$project\" \"$apicall\" \"$@\"; \
+    }; f"
+    gitlabget = "!f() { git gitlabargs gitlabgetcall \"$@\"; }; f"
+    gitlabpost = "!f() { git gitlabargs gitlabpostcall \"$@\"; }; f"
+    gitlabput = "!f() { git gitlabargs gitlabputcall \"$@\"; }; f"
+    gitlabprojectsall = "!f() { git gitlabpage gitlabget projects \"\" \"\"; }; f"
+    gitlabpaths = "!f() { git gitlabprojectsall | git jsoniter path_with_namespace | sed \"s, / ,/,g\" | grep -i ${1:-.} | sort; }; f"
+    gitlabnames = "!f() { git gitlabprojectsall | git jsoniter name_with_namespace | sed \"s, / ,/,g\" | grep -i ${1:-.} | sort; }; f"
+    gitlabmr = "!f() { \
+        [ $# -lt 3 ] && { >&2 echo Usage: gitlabmr project[.=current] call[-=read +=write .=single *=api] jsonkey[.=all] extra... && return 1; }; \
+        project=\"$1\"; shift; \
+        alias=gitlabget; \
+        case $1 in \
+            -) alias=gitlabget; call=\"\"; ;; \
+            +) alias=gitlabpost; call=\"\"; ;; \
+            .) alias=gitlabget; call=\"/.\"; ;; \
+            *) alias=gitlabput; call=\"/$1\"; ;; \
+        esac; \
+        shift; \
+        if [ \"$1\" = \".\" ]; then iter=\"git jsontool\"; \
+        else iter=\"git jsoniter $1\"; fi; \
+        shift; \
+        git $alias projects merge_requests$call \"$project\" $args \"$@\" state=opened | $iter; \
+    }; f"
+    gitlabmrmatch = "!f() { \
+        [ $# -lt 1 ] && { echo Usage: gitlabmrmatch variable=predicate extra... && return 1; }; \
+        predicate=\"$1\"; shift; \
+        variable=${predicate%=*}; \
+        compare=${predicate#*=}; \
+        if [ \"${variable:0:1}\" = - ]; then extra=v; variable=${variable:1}; \
+        elif [ \"${variable:0:1}\" = + ]; then variable=${variable:1}; fi; \
+        git gitlabmr . - $variable,merge_status,has_conflicts,source_branch,target_branch,web_url \"$@\" | grep -E$extra \"^$compare \"; \
+    }; f"
+    gitlabtriggertoken = "!f() { git gitlabget projects triggers ${1:-.} | git jsoniter token 2>/dev/null | grep -E '.{30}'; }; f"
+    gitlabpipeline = "!f() { \
+        [ $# -lt 2 ] && { echo Usage: gitlab pipeline id ref [var=value ...]; return 1; }; : Ensure proper number of arguments; \
+        id=\"$1\"; shift;                                                                  : Get value of id; \
+        ref=$1; shift;                                                                     : Get value of ref; \
+        args=\"-F ref=$ref -F variables[GIT_DEPTH]=0\";                                    : Construct first part of API command; \
+        while [ $# -gt 0 ]; do                                                             : Loop over remaining arguments for passing variables to API command; \
+            arg=$(echo $1 | sed \"s,=,\\]=,\");                                            : Change = to ]=; \
+            args=\"$args -F variables[$arg\";                                              : Use regex to get variable in proper form for API command; \
+            shift;                                                                         : Get next argument; \
+        done; \
+        token=$(git gitlabtriggertoken \"$id\");                                           : Get token from config; \
+        [ -z \"$token\" ] && { >&2 echo gitlabpipeline: no valid tokens; return 1; };      : Error out if no token in config; \
+        git gitlabpost projects ./trigger/pipeline $id $args -F token=$token;              : Call API; \
+    }; f"
+    jsoniter = "!f() { \
+        [ $# -lt 1 -o $# -gt 3 ] && { echo Usage: jsoniter field1[,field2,... indelim=, outdelim=\\' \\'] && return 1; }; \
+        indelim=${2:-,}; \
+        outdelim=${3:- }; \
+        args=$(echo \"$1\" | awk -F$indelim '{for(i=1;i<=NF;i++) printf(\"\\047%s\\047%s\", $i, (i<NF ? \",\" : \"\\n\"))}'); \
+        $(git varvalue python) -c \"import sys,json; \
+        from types import SimpleNamespace; \
+        ns = json.loads(sys.stdin.read(), object_hook=lambda item: SimpleNamespace(**item)); \
+        [print('$outdelim' if j != 0 else '', i.__getattribute__(k), end='', sep='') if hasattr(i,k) else print('') for i in (ns if isinstance(ns,list) else [ns]) for (j, k) in enumerate([$args, '$indelim'])];\"; \
+    }; f"
